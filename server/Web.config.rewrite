@@ -1,0 +1,17 @@
+<!-- 기존 Web.config의 <system.webServer> 안에 아래 <rewrite> 블록을 추가하세요 -->
+<rewrite>
+  <rules>
+    <rule name="HRClib to dist" stopProcessing="true">
+      <match url="^HRClib/?$" />
+      <action type="Rewrite" url="HRClib/dist/" />
+    </rule>
+    <rule name="HRClib SPA fallback" stopProcessing="true">
+      <match url="^HRClib/(?!dist/)(.*)$" />
+      <conditions>
+        <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
+        <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
+      </conditions>
+      <action type="Rewrite" url="HRClib/dist/{R:1}" />
+    </rule>
+  </rules>
+</rewrite>

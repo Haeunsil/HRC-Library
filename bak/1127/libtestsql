@@ -1,0 +1,7 @@
+CREATE TABLE  `survey2025`.`libtestsql` (
+  `id` int(4) NOT NULL AUTO_INCREMENT,
+  `Qnum` varchar(100) DEFAULT NULL,
+  `QMcode` text,
+  `Perlcode` text,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=282 DEFAULT CHARSET=utf8;

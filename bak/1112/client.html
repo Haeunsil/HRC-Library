@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>HRC Library</title>
+  <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/png" href="img/favicon.png">
+</head>
+<body>
+<a href="#main" class="skip">본문으로 건너뛰기</a>
+
+<header>
+  <div class="container topbar">
+    <div class="logo">📚 HRC Library  </div>
+    <div class="search-container">
+      <input id="searchInput" type="text" placeholder="검색어를 입력하세요..." />
+      <div id="searchSuggestions" class="search-suggestions" hidden></div>
+    </div>
+    <div class="user-level-switcher">
+      <button class="level-btn" id="level-btn-1" title="코드 보기">💻</button>
+      <button class="level-btn" id="level-btn-2" title="설문지 보기">📋</button>
+      <button class="level-btn" id="level-btn-3" title="고급 기능">⚙️</button>
+    </div>
+  </div>
+  <div class="container controls" role="region" aria-label="공통 컨트롤">
+    <div class="filter-row" id="filterRow">
+      <!-- QuestionType 값들이 동적으로 생성됩니다 -->
+    </div>
+  </div>
+   
+                                               <!-- 선택된 값 표시 영역 -->
+       <div class="container">
+         <div class="selection-display">
+           <div class="selection-item">
+             <span class="selected-value">선택된 항목이 없습니다</span>
+           </div>
+         </div>
+       </div>
+ </header>
+
+<main id="main" class="container" tabindex="-1">
+  <!-- 왼쪽: 뷰 (Usercode=1에서만 표시) -->
+  <section class="panel" aria-labelledby="view-title" id="view-section">
+    <div class="panel-title" id="view-title">뷰</div>
+    <div class="view-modes" role="group" aria-label="뷰 옵션">
+      <button class="chip" data-mode="pc" aria-pressed="true">PC</button>
+      <button class="chip" data-mode="mobile">모바일</button>
+      <button class="chip" data-mode="mobile-land">모바일(가로)</button>
+    </div>
+    <div class="panel-body">
+      <div class="view-placeholder" id="view-placeholder">
+        <div class="placeholder-content">
+          <div class="placeholder-icon">👆</div>
+          <h3>문항을 선택해주세요.</h3>
+          <p>카테고리나 검색을 통해 문항을 선택하면 여기에 표시됩니다.</p>
+        </div>
+      </div>
+      <div class="iframe-wrap" id="iframe-wrap" hidden>
+        <iframe id="view-iframe" class="device" frameborder="0"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="code-title">
+    <div class="panel-title" id="code-title">코드</div>
+ 
+    <!-- Usercode=1: 코드 영역 (기본) -->
+    <div id="code-area" class="user-level-content">
+      <!-- 코드 영역 상단 헤더 -->
+      <div class="code-top-header">
+        <span class="qnum-serial"><em>[qnum]</em></span>
+        <button class="btn copy-serial-btn" data-type="qnum">qnum 복사</button>
+      </div>
+      
+      <div class="tabs" role="tablist" aria-label="엔진 탭">
+        <button class="tab" role="tab" aria-selected="true" aria-controls="qm-panel" id="tab-qm">Q-M</button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="perl-panel" id="tab-perl">Perl</button>
+        <button id="copyBtn" class="btn">코드 복사</button>
+      </div>
+
+      <div class="codebar">
+        <div class="left">
+          <label for="engine" class="muted">엔진 옵션</label>
+          <select id="engine" class="select" aria-label="엔진 옵션">
+            <option value="question">question</option>
+            <option value="condition" >condition</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="panel-body">
+        <!-- Q-M 코드 -->
+        <div id="qm-panel" role="tabpanel" aria-labelledby="tab-qm">
+          <pre id="qm-code"># Q-M 예시
+문항을 선택해주세요.</pre>
+        </div>
+
+        <!-- Perl 코드 -->
+        <div id="perl-panel" role="tabpanel" aria-labelledby="tab-perl" hidden>
+          <pre id="perl-code"># Perl 예시 (엔진: 기본)
+문항을 선택해주세요.</pre>
+        </div>
+
+        <!-- 이미지 영역 -->
+        <div id="image-panel" class="image-panel" hidden>
+          <div class="image-controls">
+            <button id="downloadSurveyBtn" class="btn-small">설문지 다운로드</button>
+            <button id="refreshImageBtn" class="btn-small">새로고침</button>
+          </div>
+          <div class="image-container">
+            <img id="survey-image" class="survey-image" src="" />
+            <div class="image-placeholder" id="image-placeholder">
+              <div class="placeholder-content">
+                <div class="placeholder-icon">📋</div>
+                <h3>설문지 이미지</h3>
+                <p>문항을 선택하면 해당 설문지 이미지가 여기에 표시됩니다.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+</main>
+
+<footer>
+  <div class="container">
+    <p class="muted">© Hankook Research. All rights reserved. | Website Manager: Solution Division 2 (esha@hrc.co.kr / jychoi@hrc.co.kr)
+    </p>
+  </div>
+</footer>
+
+<script src="api.js"></script>
+</body>
+</html>

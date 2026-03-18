@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html class="light" lang="ko">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Modern Collapsible Sidebar Library</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=JetBrains+Mono&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#c62828",
+                        "background-light": "#ffffff",
+                        "workspace-bg": "#fcfcfc",
+                        "nav-selected": "#fee2e2",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                        mono: ["JetBrains Mono", "monospace"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.5rem",
+                    },
+                },
+            },
+        };
+    </script>
+    <style type="text/tailwindcss">
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+        .syntax-keyword { color: #d32f2f; font-weight: 600; }
+        .syntax-string { color: #2e7d32; }
+        .syntax-comment { color: #94a3b8; font-style: italic; }
+        .syntax-function { color: #0284c7; }
+        .syntax-number { color: #7c3aed; }
+        .syntax-tag { color: #c62828; }
+        .syntax-attr { color: #92400e; }
+    </style>
+</head>
+
+<body class="bg-workspace-bg font-display text-slate-800 min-h-screen flex overflow-hidden">
+    <aside
+        class="w-80 border-r border-slate-200 flex flex-col h-screen bg-white shrink-0 z-50 transition-all duration-300 ease-in-out relative group">
+        <div class="px-6 py-6 flex items-center justify-between">
+            <div class="flex items-center gap-3 overflow-hidden">
+                <div
+                    class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white shadow-md shadow-red-200 shrink-0">
+                    <span class="material-symbols-outlined text-lg">biotech</span>
+                </div>
+                <span
+                    class="font-bold text-lg tracking-tight text-slate-900 uppercase whitespace-nowrap opacity-100 transition-opacity duration-300">Lab
+                    <span class="text-primary font-black">Pattern</span></span>
+            </div>
+            <button aria-label="Toggle Sidebar"
+                class="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-primary hover:bg-slate-50 transition-colors shrink-0">
+                <span class="material-symbols-outlined">first_page</span>
+            </button>
+        </div>
+        <div class="px-6 mb-2">
+            <div class="relative group/search">
+                <span
+                    class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg group-focus-within/search:text-primary transition-colors">search</span>
+                <input
+                    class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all text-sm placeholder:text-slate-400"
+                    placeholder="Find pattern..." type="text" />
+                <div class="absolute right-2 top-1/2 -translate-y-1/2 hidden group-focus-within/search:block">
+                    <kbd
+                        class="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-bold text-slate-400 bg-white border border-slate-200 rounded">⌘K</kbd>
+                </div>
+            </div>
+        </div>
+        <nav class="flex-1 overflow-y-auto px-4 py-4 space-y-6">
+            <div>
+                <div
+                    class="flex items-center gap-3 px-3 py-2 text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-lg cursor-pointer transition-colors group">
+                    <span class="material-symbols-outlined text-xl group-hover:text-primary">grid_view</span>
+                    <span class="text-sm font-medium whitespace-nowrap">Dashboard</span>
+                </div>
+                <div
+                    class="flex items-center gap-3 px-3 py-2 text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-lg cursor-pointer transition-colors group">
+                    <span class="material-symbols-outlined text-xl group-hover:text-primary">star</span>
+                    <span class="text-sm font-medium whitespace-nowrap">Favorites</span>
+                </div>
+            </div>
+            <div class="space-y-2">
+                <h3 class="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 whitespace-nowrap">
+                    Projects</h3>
+                <div class="space-y-1">
+                    <div class="flex items-center justify-between px-3 py-1.5 text-slate-900 cursor-pointer">
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-primary text-xl">folder_open</span>
+                            <span class="text-xs font-bold uppercase tracking-wider whitespace-nowrap">Hankook-R</span>
+                        </div>
+                        <span class="material-symbols-outlined text-slate-400 text-lg">expand_more</span>
+                    </div>
+                    <div class="ml-3 pl-3 border-l border-slate-100 space-y-1 mt-1">
+                        <div
+                            class="flex items-center gap-3 px-3 py-2 bg-red-50 text-primary rounded-md cursor-pointer text-sm font-semibold relative overflow-hidden">
+                            <div class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
+                            <span class="material-symbols-outlined text-lg">task_alt</span>
+                            <span class="whitespace-nowrap">Agreements</span>
+                        </div>
+                        <div
+                            class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-md cursor-pointer text-sm transition-colors">
+                            <span class="material-symbols-outlined text-lg">fact_check</span>
+                            <span class="whitespace-nowrap">Survey Logic</span>
+                        </div>
+                        <div
+                            class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-md cursor-pointer text-sm transition-colors">
+                            <span class="material-symbols-outlined text-lg">contact_page</span>
+                            <span class="whitespace-nowrap">Verification</span>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-slate-50 hover:text-slate-900 rounded-lg cursor-pointer mt-2 transition-colors">
+                    <span class="material-symbols-outlined text-slate-400 text-xl">folder</span>
+                    <span class="text-xs font-bold uppercase tracking-wider whitespace-nowrap">Internal_UX</span>
+                </div>
+            </div>
+        </nav>
+        <div class="p-4 border-t border-slate-100">
+            <div
+                class="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer group">
+                <div class="w-9 h-9 rounded-full bg-slate-200 overflow-hidden ring-2 ring-white shadow-sm shrink-0">
+                    <img alt="avatar"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuAoTz4DAkHHnsbBsomMZY-RGY3OjdQdBcQKSh8vbhAEJQFy_iCXEISJkOnaXziJkh-G9IJiR4CuYLf6gyr8PrtVc-4bgpk3S9clXj2EbOSwNH1YlCcmkES9pnmstb0_PN6jKhfDB60Tg9H2qNQqO7eUXh3Aqq4g2fJ_TOopCAo3pNytOALVrw841a0p1eSBsJch7awDCGP5di9iHz5A1FZ1vxcPi5aEZbMZL_8jaeEbqIMj-G9qp5MN529qs_8uGI4tcNztVbcU8SQ" />
+                </div>
+                <div class="overflow-hidden">
+                    <p class="text-xs font-bold text-slate-900 truncate">Admin User</p>
+                    <p
+                        class="text-[10px] text-slate-500 font-medium uppercase tracking-tight group-hover:text-primary transition-colors">
+                        Research Lead</p>
+                </div>
+                <button class="ml-auto text-slate-300 hover:text-primary transition-colors">
+                    <span class="material-symbols-outlined text-lg">settings</span>
+                </button>
+            </div>
+        </div>
+    </aside>
+    <div class="flex-1 flex flex-col h-screen overflow-hidden">
+        <main class="flex-1 flex flex-col p-6 gap-6 overflow-hidden bg-workspace-bg">
+            <div class="flex items-center justify-between shrink-0 mb-2">
+                <div class="flex items-center gap-2 text-sm">
+                    <span
+                        class="px-2 py-1 rounded bg-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Agreement</span>
+                    <span class="text-slate-300">/</span>
+                    <h1 class="font-bold text-slate-900">Agreement Form 1</h1>
+                    <span
+                        class="ml-2 px-2 py-0.5 rounded-full bg-red-100 text-primary text-[10px] font-bold">v2.1</span>
+                </div>
+                <div class="flex gap-2">
+                    <div class="flex bg-white border border-slate-200 rounded-lg p-0.5 shadow-sm">
+                        <button
+                            class="p-1.5 rounded-md hover:bg-slate-50 text-slate-400 hover:text-slate-600 transition-colors"
+                            title="Grid View">
+                            <span class="material-symbols-outlined text-lg">grid_view</span>
+                        </button>
+                        <button class="p-1.5 rounded-md bg-slate-100 text-slate-900 shadow-sm" title="Split View">
+                            <span class="material-symbols-outlined text-lg">vertical_split</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-6 overflow-hidden">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-hidden">
+                    <div
+                        class="px-4 py-3 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
+                        <div class="flex items-center gap-4">
+                            <span
+                                class="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-base">desktop_windows</span>
+                                Preview
+                            </span>
+                            <div class="h-4 w-px bg-slate-200"></div>
+                            <div class="flex gap-2">
+                                <button
+                                    class="p-1 rounded text-primary bg-red-50 hover:bg-red-100 transition-colors"><span
+                                        class="material-symbols-outlined text-lg">desktop_mac</span></button>
+                                <button class="p-1 rounded text-slate-400 hover:bg-slate-50 transition-colors"><span
+                                        class="material-symbols-outlined text-lg">tablet_mac</span></button>
+                                <button class="p-1 rounded text-slate-400 hover:bg-slate-50 transition-colors"><span
+                                        class="material-symbols-outlined text-lg">smartphone</span></button>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button
+                                class="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-colors"><span
+                                    class="material-symbols-outlined text-lg">refresh</span></button>
+                            <button
+                                class="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-colors"><span
+                                    class="material-symbols-outlined text-lg">open_in_new</span></button>
+                        </div>
+                    </div>
+                    <div class="flex-1 overflow-y-auto p-8 bg-[#f8fafc] flex justify-center">
+                        <div
+                            class="w-full max-w-md bg-white shadow-xl shadow-slate-200/50 border border-slate-100 rounded-xl overflow-hidden self-start">
+                            <div class="px-6 py-4 border-b border-slate-50 flex justify-between items-center bg-white">
+                                <div class="text-primary font-bold text-base flex items-center gap-1">
+                                    Hankook<span class="font-normal text-slate-300">|</span>Research
+                                </div>
+                                <div class="w-16 h-1 bg-slate-100 rounded-full overflow-hidden">
+                                    <div class="bg-primary h-full w-1/3"></div>
+                                </div>
+                            </div>
+                            <div class="p-6 space-y-6">
+                                <div>
+                                    <span
+                                        class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 block">Consent
+                                        Form</span>
+                                    <h2 class="text-xl font-bold text-slate-900 leading-tight">설문조사 참여 동의서</h2>
+                                </div>
+                                <div
+                                    class="p-4 bg-slate-50 rounded-lg border border-slate-100 text-slate-600 leading-relaxed text-xs">
+                                    본인은 한국보건의료연구원에서 주관하는 이번 연구의 목적과 내용을 이해하고 설문조사 목적 및 진행 과정, 참여시 혜택 및 중단 시 불이익 등을 사전에
+                                    설명 들었습니다.
+                                </div>
+                                <div class="space-y-2">
+                                    <label
+                                        class="flex items-center gap-3 p-3 border border-primary/20 bg-red-50/10 rounded-xl cursor-pointer transition-all ring-1 ring-primary/20">
+                                        <div
+                                            class="w-4 h-4 rounded-full border border-primary flex items-center justify-center">
+                                            <div class="w-2 h-2 rounded-full bg-primary"></div>
+                                        </div>
+                                        <span class="text-slate-800 font-medium text-sm">동의함</span>
+                                    </label>
+                                    <label
+                                        class="flex items-center gap-3 p-3 border border-slate-100 rounded-xl hover:border-slate-200 cursor-pointer transition-all">
+                                        <div class="w-4 h-4 rounded-full border border-slate-300"></div>
+                                        <span class="text-slate-600 font-medium text-sm">동의하지 않음</span>
+                                    </label>
+                                </div>
+                                <button
+                                    class="w-full py-3 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-black transition-colors shadow-lg shadow-slate-200 mt-2">
+                                    Continue
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-hidden">
+                    <div
+                        class="px-4 py-3 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
+                        <div class="flex items-center gap-3">
+                            <div class="flex gap-1.5">
+                                <div class="w-2.5 h-2.5 rounded-full bg-red-400/20"></div>
+                                <div class="w-2.5 h-2.5 rounded-full bg-yellow-400/20"></div>
+                                <div class="w-2.5 h-2.5 rounded-full bg-green-400/20"></div>
+                            </div>
+                            <div class="h-4 w-px bg-slate-100 mx-1"></div>
+                            <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Source</span>
+                        </div>
+                        <div class="flex items-center bg-slate-100 rounded-lg p-0.5">
+                            <button
+                                class="px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-tight bg-white text-primary shadow-sm">Pattern</button>
+                            <button
+                                class="px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-tight text-slate-500 hover:text-slate-800 transition-colors">Schema</button>
+                            <button
+                                class="px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-tight text-slate-500 hover:text-slate-800 transition-colors">Docs</button>
+                        </div>
+                    </div>
+                    <div class="flex-1 overflow-y-auto p-6 font-mono text-[13px] leading-6 bg-white">
+                        <div class="space-y-1">
+                            <p><span class="syntax-keyword">#component</span> <span
+                                    class="syntax-number">ConsentForm</span></p>
+                            <p><span class="syntax-keyword">#id</span> <span class="syntax-string">"q9001"</span></p>
+                            <br />
+                            <p><span class="syntax-comment">// Content definition</span></p>
+                            <p><span class="syntax-tag">title</span>: <span class="syntax-string">"[동의서양식][설문조사 참여
+                                    동의서]"</span></p>
+                            <p><span class="syntax-tag">description</span>: <span class="syntax-string">"본인은
+                                    한국보건의료연구원에서..."</span></p>
+                            <br />
+                            <p><span class="syntax-comment">// Options</span></p>
+                            <p><span class="syntax-keyword">options</span>: [</p>
+                            <p class="pl-4">{ <span class="syntax-attr">label</span>: <span
+                                    class="syntax-string">"동의함"</span>, <span class="syntax-attr">value</span>: <span
+                                    class="syntax-number">1</span>, <span class="syntax-attr">default</span>: <span
+                                    class="syntax-keyword">true</span> },</p>
+                            <p class="pl-4">{ <span class="syntax-attr">label</span>: <span class="syntax-string">"동의하지
+                                    않음"</span>, <span class="syntax-attr">value</span>: <span
+                                    class="syntax-number">2</span> }</p>
+                            <p>]</p>
+                            <br />
+                            <p><span class="syntax-comment">// Logic</span></p>
+                            <p><span class="syntax-keyword">function</span> <span
+                                    class="syntax-function">onSelect</span>(<span class="syntax-attr">value</span>) {
+                            </p>
+                            <p class="pl-4"><span class="syntax-keyword">if</span> (value == <span
+                                    class="syntax-number">2</span>) {</p>
+                            <p class="pl-8"><span class="syntax-function">terminateSurvey</span>({</p>
+                            <p class="pl-12"><span class="syntax-attr">reason</span>: <span
+                                    class="syntax-string">"user_declined"</span>,</p>
+                            <p class="pl-12"><span class="syntax-attr">redirect</span>: <span
+                                    class="syntax-string">"/exit"</span></p>
+                            <p class="pl-8">});</p>
+                            <p class="pl-4">}</p>
+                            <p>}</p>
+                            <br />
+                            <p><span class="syntax-comment">// Styles (Tailwind)</span></p>
+                            <p><span class="syntax-keyword">const</span> <span class="syntax-attr">styles</span> = {</p>
+                            <p class="pl-4"><span class="syntax-attr">container</span>: <span class="syntax-string">"p-6
+                                    space-y-6 bg-white"</span>,</p>
+                            <p class="pl-4"><span class="syntax-attr">infobox</span>: <span class="syntax-string">"p-4
+                                    bg-slate-50 border-slate-100"</span>,</p>
+                            <p class="pl-4"><span class="syntax-attr">btnPrimary</span>: <span
+                                    class="syntax-string">"bg-slate-900 text-white"</span></p>
+                            <p>}</p>
+                        </div>
+                    </div>
+                    <div
+                        class="px-4 py-3 bg-slate-50 border-t border-slate-100 flex justify-between items-center text-[10px] text-slate-400 font-mono font-bold uppercase tracking-wider shrink-0">
+                        <div class="flex items-center gap-4">
+                            <span class="flex items-center gap-1.5 text-green-600"><span
+                                    class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Validated</span>
+                            <span>TS: 4.2ms</span>
+                        </div>
+                        <button class="hover:text-primary transition-colors flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-[14px]">content_copy</span> Copy
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <footer
+                class="flex items-center justify-between py-1 text-[9px] text-slate-300 uppercase tracking-widest font-bold shrink-0">
+                <div>Research UX Lab 2.1</div>
+                <div>Last Sync: 2m ago</div>
+            </footer>
+        </main>
+    </div>
+
+</body>
+
+</html>

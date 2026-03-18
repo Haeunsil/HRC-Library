@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html class="light" lang="ko">
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>HRC Library</title>
+    <!--<link rel="icon" type="image/png" href="/favicon.png" />-->
+    <link rel="icon" type="image/png" href="/HRClib/dist/favicon.png" />
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <!-- Pretendard: index.css --font-sans에서 사용. 로컬에서 폰트 깨짐 방지 -->
+    <link rel="stylesheet" as="style" crossorigin
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=JetBrains+Mono&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=block"
+        rel="stylesheet" />
+    <!-- Production에서는 Tailwind CDN을 사용하지 않습니다. (Vite 빌드된 CSS 사용) -->
+    <style>
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body class="bg-workspace-bg font-display text-slate-800 min-h-screen flex overflow-hidden">
+    <div id="root"></div>
+    <!-- Edge 등: API 요청을 HTML 로드 직후 시작해 React 로딩과 병렬 처리 -->
+    <script>
+        (function(){
+            var p = location.pathname;
+            var base = p.replace(/\/dist\/?.*$/, '') || p.substring(0, p.lastIndexOf('/') || 1);
+            var isProd = /^webdemo(?:test)?\.hrcglobal\.com$/.test(location.hostname);
+            var isDev = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') && !isProd;
+            var url = isProd ? (base || '/HRClib') + '/api_proxy.aspx?_path=' + encodeURIComponent('/api/get_init') : (isDev ? 'http://localhost:8000/api/get_init' : '/api/get_init');
+            window.__INIT_PREFETCH__ = fetch(url, { credentials: 'omit' }).then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; });
+            // 배포 버전 검사: 서버에 새 버전이 있으면 강제 새로고침 (캐시된 구버전 방지)
+            if (isProd) {
+                var metaVer = document.querySelector('meta[name="build-version"]')?.content;
+                var verUrl = (base || '/HRClib').replace(/\/$/, '') + '/dist/version.json?t=' + Date.now();
+                var reloadKey = 'hrclib_version_reload';
+                fetch(verUrl, { cache: 'no-store', credentials: 'omit' }).then(function(r){
+                    if (!r.ok) {
+                        if (!sessionStorage.getItem(reloadKey)) { sessionStorage.setItem(reloadKey, '1'); window.location.replace(location.pathname + (location.search ? '&' : '?') + '_v=' + Date.now()); }
+                        return null;
+                    }
+                    return r.json();
+                }).then(function(data){
+                    if (data && data.v && metaVer && data.v !== metaVer) {
+                        var u = location.pathname + (location.search ? '&' : '?') + '_v=' + Date.now();
+                        window.location.replace(u);
+                    } else if (data && data.v) { sessionStorage.removeItem(reloadKey); }
+                }).catch(function(){
+                    if (!sessionStorage.getItem(reloadKey)) { sessionStorage.setItem(reloadKey, '1'); window.location.replace(location.pathname + (location.search ? '&' : '?') + '_v=' + Date.now()); }
+                });
+                // 스크립트 로드 실패(404 등) 시 새로고침
+                window.addEventListener('error', function(e){
+                    if (e.target && e.target.tagName === 'SCRIPT' && e.target.src && (e.target.src.indexOf('/assets/') >= 0 || e.target.src.indexOf('assets/') >= 0)) {
+                        if (!sessionStorage.getItem(reloadKey)) { sessionStorage.setItem(reloadKey, '1'); window.location.replace(location.pathname + (location.search ? '&' : '?') + '_v=' + Date.now()); }
+                    }
+                }, true);
+            }
+        })();
+    </script>
+    <script type="module" src="./src/main.jsx"></script>
+</body>
+
+</html>

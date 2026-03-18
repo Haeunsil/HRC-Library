@@ -1,0 +1,52 @@
+#!/usr/bin/perl -w
+
+use CGI;
+use Cwd;
+use DBI;
+
+$q = new CGI;
+
+print $q->header(-charset=>'utf-8');
+
+$PID = $q->param('PID');
+$eveVar = $q->param('eveVar');
+$chasu = $q->param('chasu');
+$status = $q->param('status');
+
+
+
+my $dsn = "DBI:mysql:host=10.0.11.85;database=survey2025";
+my $dbh = DBI->connect($dsn, "survey", "survey");
+$dbh->do("set names utf8");
+
+
+if ($eveVar == 1 && $status eq "start")
+{
+	$query = "update q251161list set status".$chasu."='".$status."' where PID='".$PID."' and (status".$chasu." <> 'complete' or status10 IS NULL) ;";
+	print $query;
+	$dbh->do($query);
+}
+if ($eveVar == 1 && $status eq "complete")
+{
+	$query = "update q251161list set status".$chasu."='".$status."', completedate".$chasu." = now() where PID='".$PID."';";
+	print $query;
+	$dbh->do($query);
+}
+
+if ($eveVar == 2)
+{
+	$query = "update q251161list set status".$chasu."='".$status."' where PID='".$PID."';";
+	
+	print $query;
+	$dbh->do($query);
+}
+
+
+$dbh->disconnect;
+
+
+
+print "<script>\n";
+print "window.location='https://a25.hrcglobal.com/q251161/?PID=".$PID."';\n";
+print "</script>\n";
+

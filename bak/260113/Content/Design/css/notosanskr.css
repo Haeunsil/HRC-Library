@@ -1,0 +1,22 @@
+@charset "utf-8";
+/* CSS Document */
+
+/* noto-sans-kr-regular - korean */
+@font-face {
+  font-family: 'Noto Sans KR';
+  font-style: normal;
+  font-weight: 400;
+  src: local(''),
+       url('/Content/Design/fonts/notosanskr/notosanskr-regular.woff2') format('woff2'),
+       url('/Content/Design/fonts/notosanskr/notosanskr-regular.woff') format('woff');
+}
+
+/* noto-sans-kr-700 - korean */
+@font-face {
+  font-family: 'Noto Sans KR';
+  font-style: normal;
+  font-weight: 700;
+  src: local(''),
+       url('/Content/Design/fonts/notosanskr/notosanskr-700.woff2') format('woff2'), 
+       url('/Content/Design/fonts/notosanskr/notosanskr-700.woff') format('woff');
+}

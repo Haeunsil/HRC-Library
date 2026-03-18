@@ -1,0 +1,1665 @@
+@import "tailwindcss";
+
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 10px;
+}
+
+
+/* CSS 변수 정의 - Minimalist Tech Library Theme */
+:root {
+  /* Palette - Pure White & Tech Grays */
+  --bg: #FFFFFF;
+  --bg-subtle: #F9FAFB;
+  --fg: #111827;
+  --muted: #6B7280;
+  --surface: #FFFFFF;
+  --surface-2: #F3F4F6;
+  --border: #E5E7EB;
+
+  /* Brand Colors - Premium Deep Red */
+  --primary: #9E2A2F;
+  --primary-dark: #8A2226;
+  --primary-light: #FEF2F2;
+
+  /* Gradients & Textures */
+  /* Gradients & Textures */
+  --grad-primary: linear-gradient(180deg, #C0454B 0%, #7A1C20 100%);
+  /* High Contrast Gradient */
+  --grad-surface: linear-gradient(to bottom, #ffffff, #f9f9f9);
+  --glass: rgba(255, 255, 255, 0.9);
+
+  /* Shadows & Highlights */
+  --highlight: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-red: 0 4px 12px rgba(158, 42, 47, 0.15);
+
+  /* Typography */
+  --font-sans: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-serif: 'Roboto Slab', serif;
+  --font-signature: 'Nanum Pen Script', cursive;
+
+  /* UI Tokens */
+  --radius: 8px;
+  --space: clamp(20px, 4vw, 32px);
+  --maxw: 1400px;
+}
+
+/* Global Box Sizing Reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Global Typography Adjustments */
+body {
+  margin: 0;
+  background: #eee8e8;
+  color: var(--fg);
+  font: 14px/1.5 var(--font-sans);
+  font-weight: 400;
+  /* Regular weight */
+  letter-spacing: -0.02em;
+  /* Tighter tracking for precise feel */
+  min-height: 100vh;
+}
+
+
+/* Material Icons Fix - Robustly hide fallback text */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  vertical-align: middle;
+
+  /* IMPORTANT: Fix for Samsung Browser FOUT - Clips fallback text "folder_open" */
+  overflow: hidden;
+  width: 1em;
+  height: 1em;
+  text-align: center;
+}
+
+/* Ensure form elements inherit font family */
+input,
+button,
+textarea,
+select {
+  font-family: inherit;
+}
+
+/* React Root 래퍼가 전체 높이를 차지하도록 설정 */
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  /* Ensure full width */
+}
+
+/* Ensure main expands to fill available vertical space */
+main {
+  flex: 1;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* 컨테이너 - Full Width Update */
+.container {
+  width: 100%;
+  max-width: 100%;
+  /* Remove default limitation */
+  margin: 0 auto;
+  padding: 0 var(--space);
+}
+
+/* 접근성 */
+.skip {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+}
+
+.skip:focus {
+  left: 12px;
+  top: 12px;
+  background: var(--primary);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+/* 헤더 - Minimalist Flat */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: #eee8e8;
+  /* Pure White */
+  /* Pure White */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  /* Delicate border, Soft shadow */
+}
+
+.topbar {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 0;
+  /* Slightly more vertical space */
+  width: 100%;
+}
+
+.logo {
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  font-size: 24px;
+  font-family: var(--font-sans);
+  color: var(--primary);
+  flex-shrink: 0;
+  /* Clean logo without decoration */
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  color: var(--fg);
+  letter-spacing: -0.02em;
+}
+
+/* 사용자 레벨 전환 버튼 */
+.user-level-switcher {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.level-btn {
+  width: 40px;
+  height: 40px;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  color: var(--muted);
+}
+
+.level-btn:hover {
+  background: var(--surface-2);
+  color: var(--fg);
+}
+
+.level-btn.active {
+  background: var(--surface-2);
+  color: var(--primary);
+  font-weight: 700;
+}
+
+/* 검색창 - Minimalist Input */
+.search-container {
+  position: relative;
+  width: 100%;
+  max-width: 1100px;
+  /* Restored max-width per request */
+  background: transparent;
+}
+
+/* SEARCH INPUT STYLE */
+/* SEARCH INPUT STYLE */
+.search-container input {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 44px;
+  padding: 0 16px 0 48px;
+  border-radius: 24px;
+  /* Rounder pill shape */
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--fg);
+  background: #FFFFFF;
+  /* Pure white surface */
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm), inset 0 1px 2px rgba(0, 0, 0, 0.03);
+  /* Subtle inner depth */
+  transition: all 0.2s ease;
+}
+
+.search-container input::placeholder {
+  color: var(--muted);
+}
+
+.search-container input:focus {
+  border-color: var(--primary);
+  /* Minimal red border on focus */
+  background: var(--bg);
+}
+
+/* SEARCH ICON POSITIONING */
+.search-container .search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-56%);
+  /* Optical center */
+  z-index: 3;
+  color: var(--muted);
+  pointer-events: none;
+  width: 16px;
+  height: 16px;
+}
+
+/* CUSTOM DROPDOWN - Adapted from drop2 */
+.custom-select-container {
+  position: relative;
+  display: inline-block;
+  font-family: var(--font-sans);
+}
+
+/* Main Dropdown Style */
+.custom-select-trigger {
+  cursor: pointer;
+  padding: 8px 16px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #333;
+  display: flex;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 6px;
+  gap: 8px;
+  border-radius: 6px;
+  background: rgba(158, 42, 47, 0.85);
+  /* Translucent Deep Red */
+  border: 1px solid rgba(158, 42, 47, 0.2);
+  backdrop-filter: blur(4px);
+  transition: all 0.2s;
+  min-width: 120px;
+  justify-content: center;
+  text-align: center;
+}
+
+.btn-search {
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 6px;
+  border-radius: 6px;
+  background-image: var(--grad-primary);
+  /* Force Gradient Image */
+  background-color: var(--primary);
+  /* Fallback */
+  /* Premium Gradient */
+  border: 1px solid #8A2226;
+  /* Darker border */
+  box-shadow: var(--highlight), var(--shadow-sm);
+  /* Inset highlight + shadow */
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 120px;
+  padding: 0 20px;
+  height: 40px;
+  color: white;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.btn-search:hover {
+  filter: brightness(1.1);
+  box-shadow: var(--highlight), var(--shadow-red);
+  transform: translateY(-1px);
+}
+
+.btn-search:active {
+  transform: translateY(0);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Engine Dropdown (Small) */
+.custom-select-trigger.small {
+  background: white;
+  /* Requested white */
+  color: #333;
+  /* Dark text for white bg */
+  border: 1px solid #ddd;
+  padding: 4px 10px;
+  /* Resize smaller */
+  font-size: 13px;
+  min-width: 100px;
+  height: 32px;
+}
+
+.custom-select-trigger.small span {
+  color: #333 !important;
+  /* Force dark text */
+}
+
+.custom-select-trigger.small span:last-child {
+  color: #666 !important;
+  /* Dark arrow */
+}
+
+.custom-select-trigger span {
+  color: white;
+  /* Default White text for Red bg */
+}
+
+/* Override for small trigger to ensure local specificity wins if needed, 
+   but the above .custom-select-trigger.small span rule is better */
+
+/* Make arrow white too */
+.custom-select-trigger span:last-child {
+  color: white !important;
+}
+
+.custom-select-trigger:hover,
+.custom-select-container:hover .custom-select-trigger {
+  border-color: #9E2A2F;
+  box-shadow: 0 4px 8px rgba(158, 42, 47, 0.15);
+}
+
+/* Active/Open state styling */
+.custom-select-container .show~.custom-select-trigger,
+.custom-select-container:focus-within .custom-select-trigger {
+  border-color: #9E2A2F;
+  box-shadow: 0 0 0 3px rgba(158, 42, 47, 0.1);
+}
+
+/* Make the label center aligned */
+.custom-select-trigger span:first-child {
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.custom-select-menu {
+  display: block;
+  opacity: 0;
+  visibility: hidden;
+  margin-top: -20px;
+  /* drop2 animation start */
+  position: absolute;
+  background: white;
+  min-width: 200px;
+  /* Wider menu */
+  z-index: 100;
+  border-radius: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  /* drop2 shadow */
+  box-shadow: 0px 3px 15px -1px rgba(0, 0, 0, 0.2);
+
+  transition: all 0.2s linear;
+  padding: 8px 0;
+}
+
+.custom-select-menu {
+  display: block;
+  opacity: 0;
+  visibility: hidden;
+  margin-top: -20px;
+  /* drop2 animation start */
+  position: absolute;
+  background: white;
+  min-width: 180px;
+  z-index: 100;
+  border-radius: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  /* drop2 shadow */
+  -webkit-box-shadow: 0px 3px 15px -1px rgba(0, 0, 0, 0.2);
+  -moz-box-shadow: 0px 3px 15px -1px rgba(0, 0, 0, 0.2);
+  box-shadow: 0px 3px 15px -1px rgba(0, 0, 0, 0.2);
+
+  transition: all 0.2s linear;
+  /* drop2 transition */
+  padding: 8px 0;
+}
+
+/* Triangle Arrow from drop2 */
+.custom-select-menu::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: calc(50% - 5px);
+  /* drop2: calc(50% - 5px) for 10px arrow */
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  /* drop2: 10px */
+  border-right: 10px solid transparent;
+  /* drop2: 10px */
+  border-bottom: 10px solid white;
+  /* drop2: 10px */
+  z-index: 3;
+}
+
+
+
+.custom-select-menu.show {
+  visibility: visible;
+  opacity: 1;
+  margin-top: 0px;
+  /* drop2 uses 0 */
+  /* slide down to this margin */
+}
+
+.custom-select-option {
+  color: black;
+  /* Default black per request */
+  display: block;
+  text-align: left;
+  padding: 8px 18px;
+  /* drop2 padding */
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.custom-select-option:hover,
+.custom-select-option.selected {
+  background: white;
+  /* No bg change */
+  opacity: 1;
+  /* Ensure full opacity for selected/hover if desired */
+  color: #e74c3c;
+}
+
+/* SUGGESTIONS DROPDOWN */
+.search-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 6px;
+
+  background: #FFF;
+  border-radius: 12px;
+
+  /* Reference Menu Shadow/Border looks */
+  /* Since we don't have the morphing wrapper background, we apply style to the dropdown itself */
+  border: 1px solid #E4E1D8;
+  box-shadow: 0px 399px 160px rgba(100, 90, 64, 0.01), 0px 225px 135px rgba(100, 90, 64, 0.04), 0px 100px 100px rgba(100, 90, 64, 0.08), 0px 25px 55px rgba(100, 90, 64, 0.09);
+
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 50;
+  padding: 6px;
+  /* Add padding for inner items */
+
+  /* Animation Initial State */
+  opacity: 0;
+  visibility: hidden;
+  clip-path: polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%);
+  transition: opacity var(--transition-duration), visibility 0s var(--transition-duration), clip-path var(--transition-duration) var(--transition-easing);
+}
+
+/* Open State for Animation */
+.search-suggestions.open {
+  opacity: 1;
+  visibility: visible;
+  clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+  transition: opacity var(--transition-duration), visibility 0s, clip-path var(--transition-duration) var(--transition-easing);
+}
+
+/* SUGGESTION ITEMS - Adapted from .menu-btn */
+.search-suggestion-item {
+  padding: 10px 12px;
+  cursor: pointer;
+  border-radius: 9px;
+  /* Rounded items */
+  border-bottom: none;
+  /* Removed partition lines for cleaner look */
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  transition: background 0.1s ease;
+  user-select: none;
+  color: #373530;
+}
+
+.search-suggestion-item:hover {
+  background: #F6F5F2;
+  /* Reference hover color */
+}
+
+.search-suggestion-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: #373530;
+}
+
+.search-suggestion-desc {
+  font-size: 12px;
+  color: #9F9E9B;
+}
+
+/* 네비게이션 */
+nav a {
+  padding: 8px 10px;
+  border-radius: 8px;
+  color: var(--muted);
+}
+
+nav a[aria-current="page"],
+nav a:hover {
+  background: var(--surface);
+  color: var(--fg);
+}
+
+/* 컨트롤 영역 */
+.controls {
+  margin: 16px auto 20px;
+  width: 90%;
+  max-width: none;
+  /* Changed from 0 to auto to preserve container centering */
+}
+
+/* 선택된 값 표시 영역 */
+.selection-display {
+  margin: 16px 0;
+  padding: 12px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.selection-item {
+  text-align: center;
+  font-size: 14px;
+}
+
+.selected-value {
+  color: var(--fg);
+  font-weight: 500;
+}
+
+/* 필터 행 */
+.filter-row {
+  display: grid;
+  gap: var(--space);
+  grid-template-columns: 1fr 1fr;
+  align-items: stretch;
+  /* Stretch to fill grid height/width fully */
+  justify-content: center;
+  width: 100%;
+  max-width: none;
+  /* Match Search Container */
+  margin: 0 auto;
+  /* Center alignment */
+}
+
+.filter-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: auto;
+  min-width: 0;
+  /* Enable shrinking for text truncation */
+}
+
+/* Removed specific child sizing to make them identical per request */
+
+/* Specific sizing for Category (1st) and Question (2nd) */
+
+
+.filter-item select {
+  background: rgba(158, 42, 47, 0.85);
+  /* Translucent Deep Red */
+  border: 1px solid rgba(158, 42, 47, 0.2);
+  backdrop-filter: blur(4px);
+  padding: 10px 12px;
+  border-radius: 6px;
+  color: white;
+  /* White text for contrast */
+  font-size: 14px;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+  text-align: center;
+  text-align-last: center;
+  width: 100%;
+  box-shadow: 0 4px 6px rgba(158, 42, 47, 0.1);
+  position: relative;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 14px;
+  /* Refined icon size */
+  padding-right: 40px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.filter-item select option:first-child {
+  color: var(--muted);
+  font-style: italic;
+  font-weight: 500;
+}
+
+.filter-item select option:not(:first-child) {
+  color: var(--fg);
+  padding: 8px 12px;
+  border-bottom: 1px solid #f0f0f0;
+  white-space: normal;
+  word-wrap: break-word;
+  min-width: max-content;
+}
+
+.filter-item select:hover {
+  border-color: #d1d5db;
+  /* Neutral hover */
+  box-shadow: var(--shadow-md);
+}
+
+.filter-item select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(158, 42, 47, 0.1);
+}
+
+.filter-item select.selected,
+.filter-item select[class*="selected"] {
+  background: var(--grad-primary) !important;
+  /* Premium Gradient */
+  color: #ffffff !important;
+  border: 1px solid #8A2226 !important;
+  /* Darker border for depth */
+  box-shadow: var(--highlight), var(--shadow-red) !important;
+  /* Inset highlight + Drop shadow */
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e") !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* 뷰 모드 */
+.view-modes {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: white;
+  color: var(--muted);
+  padding: 8px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 600;
+  min-width: 100px;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.chip:hover {
+  border-color: var(--primary);
+  background: #fff0f0;
+  /* Very light tint */
+  color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
+.chip[aria-pressed="true"] {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: white;
+  border-width: 1px;
+  box-shadow: var(--shadow);
+}
+
+/* 메인 레이아웃 */
+main.container {
+  display: grid;
+  gap: var(--space);
+  grid-template-columns: 1fr 1fr;
+  align-items: stretch;
+  padding: 16px var(--space);
+  /* Added var(--space) to match header/container alignment */
+  /* height: 670px !important; Fixed Height Update - Removed for responsive */
+  /* instead use min-height or auto */
+  min-height: 670px;
+  width: 90%;
+  max-width: none;
+}
+
+/* 반응형 디자인 */
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+
+  /* 헤더 모바일 레이아웃 */
+  .topbar {
+    flex-wrap: wrap;
+    justify-content: center;
+    /* Center items */
+    gap: 12px;
+    padding: 12px 0;
+  }
+
+  .logo {
+    order: 0;
+    margin-bottom: 4px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .user-level-switcher {
+    display: none !important;
+  }
+
+  .search-container {
+    order: 2;
+    width: 85%;
+    margin: 8px auto 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  .search-container .search-icon {
+    left: 20px;
+    /* Reset to 20px for better balance with 85% width */
+  }
+
+  /* 필터 영역 */
+  .filter-row {
+    flex-direction: column;
+    padding: 0;
+    width: 85%;
+    margin: 12px auto 0;
+    gap: 12px;
+    box-sizing: border-box;
+  }
+
+  /* 메인 그리드 리셋 */
+  main.container {
+    grid-template-columns: 1fr;
+    /* Single column */
+    padding: 12px 16px;
+    gap: 24px;
+    min-height: auto;
+    width: 95%;
+    /* Adjust for mobile to be wider */
+  }
+
+  /* 패널 높이 자동 조절 */
+  .panel {
+    min-height: auto;
+    height: auto !important;
+  }
+
+  .panel-header,
+  .view-modes {
+    display: none !important;
+  }
+
+  .image-container {
+    min-height: 100px;
+    padding: 10px;
+  }
+
+  .survey-image {
+    max-width: 100%;
+    max-height: 100%;
+  }
+}
+
+@media (max-width: 980px) {
+  main.container {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    padding: 16px;
+    /* Consistent padding */
+    gap: 16px;
+    height: auto !important;
+  }
+
+  .panel {
+    height: auto !important;
+    min-height: 200px;
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+/* 패널 */
+.panel {
+  background: var(--surface);
+  border: 1px solid white;
+  /* Subtle highlight */
+  box-shadow: var(--shadow);
+  border-radius: var(--radius);
+  overflow: hidden;
+  /* height: 670px !important; Fixed Height Update - Removed */
+  min-height: 670px;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel header {
+  position: initial;
+  background: none;
+  border: 0;
+}
+
+.panel-title {
+  padding: 16px 20px 0;
+  font-weight: 700;
+}
+
+.view-modes {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.panel-body {
+  padding: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: hidden;
+  overflow-x: hidden;
+}
+
+/* 뷰 영역 */
+.iframe-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  /* Changed from center to fix top cut-off */
+  padding: 10px;
+  background: var(--surface-2);
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  flex: 1;
+  overflow: hidden;
+  /* Changed to hidden to prevent double scrollbars. Iframe handles scroll. */
+}
+
+.iframe-wrap[hidden] {
+  display: none !important;
+}
+
+.device {
+  width: 100%;
+  max-width: 100%;
+  border: 0;
+  background: white;
+  border-radius: 10px;
+  height: 100%;
+  min-height: 500px;
+  /* Ensure logical height */
+  display: block;
+  object-fit: contain;
+}
+
+.device.mobile {
+  width: 375px;
+  height: 667px;
+  /* iPhone 8 / SE portrait viewport */
+  min-height: 667px;
+  max-width: 100%;
+  display: block;
+  object-fit: contain;
+}
+
+.device.mobile-land {
+  width: 667px;
+  height: 375px;
+  /* iPhone 8 / SE landscape viewport */
+  min-height: 375px;
+  max-width: 100%;
+  display: block;
+  object-fit: contain;
+}
+
+/* 뷰 컨트롤 - REMOVED or MODIFIED in new logic? Keeping as per updated file if present, else fallback */
+.view-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  padding: 16px;
+  text-align: center;
+}
+
+.view-controls .btn {
+  min-width: 200px;
+  padding: 12px 20px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.view-controls .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.view-info {
+  padding: 16px;
+  background: var(--surface);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.view-info p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* 코드 패널 */
+/* 탭 버튼 스타일 통일 */
+.tab {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: white;
+  color: var(--muted);
+  padding: 8px 16px;
+  border-radius: 8px;
+  /* Rectangular */
+  cursor: pointer;
+  margin-right: 8px;
+  font-weight: 600;
+  /* Match .chip */
+  font-size: 14px;
+  min-width: 100px;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.tab:hover {
+  border-color: var(--primary);
+  background: #fff0f0;
+  color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
+.tab[aria-selected="true"] {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: white;
+  border-width: 1px;
+  box-shadow: var(--shadow);
+}
+
+.tab:last-child {
+  margin-right: 0;
+}
+
+/* 탭 영역 스타일 통일 */
+.tabs {
+  display: flex;
+  align-items: center;
+  /* Removed justify-content: space-between because the copy button uses margin-left: auto */
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-bottom: none;
+  /* Removed bottom border per user request */
+  /* Removed bottom border per user request */
+  margin-bottom: 0;
+}
+
+#copyBtn {
+  min-width: 100px;
+  /* Match .tab width (100px) */
+  text-align: center;
+  justify-content: center;
+  display: flex;
+  align-items: center;
+  /* margin-left: auto; Removed for unified header */
+  /* Ensure it stays on the right */
+}
+
+.codebar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.codebar .left {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.codebar .left label {
+  font-size: 14px;
+  /* Default matching size */
+  font-weight: 600;
+  color: var(--fg);
+  /* Ensure it's not too muted if resizing up */
+}
+
+.select {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  border-radius: 8px;
+  color: var(--fg);
+  min-width: 120px;
+  /* Standardized width */
+  font-size: 14px;
+  /* Standardized font size */
+  text-align: center;
+  text-align-last: center;
+  cursor: pointer;
+}
+
+#qm-panel,
+#perl-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+#qm-panel[hidden],
+#perl-panel[hidden] {
+  display: none !important;
+}
+
+/* 일련번호 헤더 (Integrated) */
+.unified-code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .unified-code-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    /* Slightly reduced vertical gap */
+  }
+
+  .header-left,
+  .header-right {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+    /* Fallback */
+  }
+
+  .tabs-inline {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+  }
+
+  /* Make all buttons expand equally to fill the row */
+  .tabs-inline .tab,
+  .header-right .btn,
+  .header-right .copy-serial-btn {
+    flex: 1;
+    width: auto;
+    /* Reset fixed width */
+    min-width: 0;
+    margin-right: 0;
+    /* Reset margins */
+    justify-content: center;
+  }
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tabs-inline {
+  display: flex;
+  align-items: center;
+}
+
+.qnum-serial {
+  font-size: 18px;
+  /* Increased from 15px to match button presence */
+  color: var(--muted);
+  font-weight: 700;
+  /* Bolder */
+}
+
+.qnum-serial em {
+  font-style: italic;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* 작은 복사 버튼 */
+.btn {
+  /* Common Button Style */
+  appearance: none;
+  border: 1px solid var(--border);
+  background: white;
+  color: var(--muted);
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 400;
+  /* Normal weight per request */
+  font-size: 14px;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn:hover {
+  border-color: var(--primary);
+  background: #fff0f0;
+  color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
+.btn-small {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  /* Rectangular */
+  background: white;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 13px;
+  /* Slightly larger for readability */
+  font-weight: 400;
+  /* Normal weight per request */
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-small:hover {
+  background: #fff0f0;
+  color: var(--primary);
+  border-color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
+.copy-serial-btn {
+  min-width: 120px;
+  padding: 8px 10px;
+  font-size: 14px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+/* Match qnum button hover style */
+#copyBtn:hover {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+/* 코드 패널 - Light Theme */
+pre {
+  margin: 0;
+  flex: 1;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  word-break: break-all;
+  background: #FFFFFF;
+  /* Light Theme */
+  color: #111827;
+  /* Dark text */
+  border-top: 1px solid var(--border);
+  padding: 20px;
+  font-family: var(--mono);
+  font-size: 14px;
+  line-height: 1.6;
+  border-radius: 0;
+  min-height: 0;
+}
+
+
+.muted {
+  color: var(--muted);
+}
+
+/* 버튼 */
+.btn {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--fg);
+  color: var(--fg);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn.primary {
+  background: var(--primary);
+  color: white;
+}
+
+/* 사용자 레벨별 영역 */
+.user-level-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* 이미지 패널 스타일 */
+.image-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+
+.image-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius) var(--radius) 0 0;
+  flex-shrink: 0;
+}
+
+.image-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-top: none;
+  padding: 10px;
+  overflow: auto;
+  min-height: 0;
+}
+
+.survey-image {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  object-position: center;
+  border-radius: var(--radius);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: block;
+}
+
+.image-placeholder {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-2);
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  margin: 20px;
+}
+
+/* 뷰 placeholder 스타일 */
+.view-placeholder {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-2);
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  margin: 20px;
+}
+
+.view-placeholder[hidden] {
+  display: none !important;
+}
+
+.view-placeholder .placeholder-content {
+  text-align: center;
+  color: var(--muted);
+}
+
+.view-placeholder .placeholder-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.view-placeholder h3 {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.view-placeholder p {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+
+/* 푸터 */
+footer {
+  color: var(--muted);
+  padding: 5px 0;
+  border-top: 1px solid var(--border);
+  margin-top: 25px;
+  text-align: center;
+}
+
+/* 코드 영역 상단 헤더 */
+.code-top-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: none;
+  border-radius: 0;
+  margin-bottom: 0;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.code-top-header .qnum-serial {
+  font-weight: 600;
+  color: var(--primary);
+  font-size: 14px;
+}
+
+.code-top-header .qnum-serial em {
+  font-style: normal;
+  font-family: var(--mono);
+  background: var(--surface-2);
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  font-size: 14px;
+}
+
+/* 상단 헤더와 탭 영역 통일된 스타일 */
+.code-top-header .btn,
+.tabs .btn {
+  padding: 8px 16px;
+  font-size: 12px;
+}
+
+/* CODE PANEL - Code1 Design */
+.code-window {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  font-family: var(--font-sans);
+}
+
+.window-header {
+  height: 48px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.traffic-lights {
+  display: flex;
+  gap: 8px;
+  width: 100px;
+  /* Give some space to balance layout */
+}
+
+.traffic-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.traffic-red {
+  background-color: #ef4444;
+}
+
+.traffic-yellow {
+  background-color: #fbbf24;
+}
+
+.traffic-green {
+  background-color: #22c55e;
+}
+
+.code-tabs {
+  display: flex;
+  height: 100%;
+  gap: 24px;
+  align-items: center;
+}
+
+.code-tab {
+  background: none;
+  border: none;
+  height: 100%;
+  padding: 0 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.code-tab:hover {
+  color: #6b7280;
+}
+
+.code-tab.active {
+  color: #9E2A2F;
+  /* Indigo color from reference */
+  border-bottom-color: #9E2A2F;
+}
+
+.window-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100px;
+  justify-content: flex-end;
+}
+
+.window-action-item {
+  color: #9ca3af;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+  width: 24px;
+  height: 24px;
+}
+
+.window-action-item:hover {
+  color: #4b5563;
+}
+
+@media (max-width: 768px) {
+  .window-header {
+    padding: 0 8px;
+  }
+
+  .code-tabs {
+    gap: 12px;
+  }
+
+  .traffic-lights,
+  .window-actions {
+    width: auto;
+    gap: 8px;
+  }
+}
+
+.q-copy-btn {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+  padding-bottom: 2px;
+}
+
+/* Fix Layout: Equal Height & Bottom Scrollbar */
+#code-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  /* Crucial for nested flex scrolling */
+}
+
+.code-window {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  /* Fill parent height */
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.code-content {
+  overflow: auto;
+  /* Handle both X and Y scroll */
+  flex: 1;
+  background: #ffffff;
+  position: relative;
+}
+
+.syntax-wrapper {
+  min-height: 100%;
+}
+
+/* Ensure syntax highlighter padding */
+.syntax-wrapper pre {
+  margin: 0 !important;
+  padding: 20px !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  overflow: visible !important;
+  /* Let parent handle scroll */
+  white-space: pre !important;
+}
+
+.comment-line,
+.comment-line *,
+.comment-line span,
+.comment-line span span {
+  color: #dc2626 !important;
+  font-style: italic !important;
+}
+
+/* Override PrismJS Default Slategray */
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: #dc2626 !important;
+}
