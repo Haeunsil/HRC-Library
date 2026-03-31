@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
+import FloatingChatbot from './components/FloatingChatbot';
 import ViewPanel from './components/ViewPanel';
 import CodePanel from './components/CodePanel';
 import { getInitData, getQuestionDetail } from './api';
@@ -14,6 +15,12 @@ const getCleanDisplayUrl = () => {
 };
 
 const isLocal = () => window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+/** 빌드 시 VITE_ENABLE_CHATBOT=0|false|no|off 이면 플로팅 챗봇 미표시 (미설정 시 표시). */
+const isChatbotEnabled = () => {
+  const v = String(import.meta.env.VITE_ENABLE_CHATBOT ?? 'true').trim().toLowerCase();
+  return !['0', 'false', 'no', 'off'].includes(v);
+};
 
 // usercode 검증: query 또는 storage (localStorage 우선 - 새로고침 시 복원)
 const hasValidUsercode = () => {
@@ -154,7 +161,9 @@ function App() {
         const { summary: all, types, apiError: err } = await getInitData();
         if (cancelled) return;
 
-        setApiError(!!err);
+        // 서버 연결 실패: apiError 플래그 또는 summary+types 둘 다 비어있을 때 (실제 DB는 항상 데이터 있음)
+        const isEmpty = (!all || all.length === 0) && (!types || types.length === 0);
+        setApiError(!!err || isEmpty);
 
         const order = ['sample','single', 'multi', 'open', 'scale', 'grid', 'popupmenu', 'sum', 'search', 'agree', 'info', 'CSS', 'exQuestion', 'media', 'cati', 'QC'];
         const sorted = [
@@ -175,6 +184,7 @@ function App() {
         setCategoryData(byCat);
       } catch (e) {
         console.error(e);
+        if (!cancelled) setApiError(true);
       }
     };
     loadAll();
@@ -285,14 +295,29 @@ function App() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#fcfcfc] font-sans text-slate-800">
+    <div className="flex flex-col h-dvh md:h-screen overflow-hidden bg-[#fcfcfc] font-sans text-slate-800">
+      {/* 서버 연결 실패 안내 - 상단 고정 (실제 서버 포함 항상 표시) */}
+      {apiError && (
+        <div className="shrink-0 flex items-center gap-3 px-4 py-3 bg-amber-50 border-b border-amber-200 text-amber-800 text-sm">
+          <span className="material-symbols-outlined text-amber-600 shrink-0">error</span>
+          <span>서버 연결에 실패했습니다. 잠시 후 새로고침하거나 관리자에게 문의해 주세요.</span>
+          <button
+            onClick={() => window.location.reload()}
+            className="ml-auto shrink-0 px-3 py-1.5 bg-amber-200 hover:bg-amber-300 text-amber-900 rounded-lg text-xs font-semibold transition-colors"
+          >
+            새로고침
+          </button>
+        </div>
+      )}
+      <div className="flex flex-1 overflow-hidden">
 
       {/* SIDEBAR */}
       <aside className={`
-          border-r border-slate-200 flex flex-col h-screen bg-white shrink-0 z-50 transition-all duration-300 ease-in-out relative group overflow-hidden
+          border-r border-slate-200 flex flex-col h-full min-h-0 max-h-dvh bg-white shrink-0 z-50 transition-all duration-300 ease-in-out relative group overflow-hidden
+          md:max-h-none
           ${isSidebarOpen ? 'w-80 opacity-100' : 'w-0 opacity-0 border-none'}
       `}>
-        <div className="px-6 py-6 flex items-center justify-between">
+        <div className="px-4 md:px-6 py-4 md:py-6 flex items-center justify-between shrink-0">
           <div
             className="flex items-center gap-3 overflow-hidden cursor-pointer group"
             onClick={handleReset}
@@ -313,7 +338,7 @@ function App() {
         </div>
 
         {/* Search Input Area */}
-        <div className="px-6 mb-2">
+        <div className="px-4 md:px-6 mb-2 shrink-0">
           <div className="relative group/search">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg group-focus-within/search:text-red-700 transition-colors">search</span>
             <input
@@ -340,12 +365,6 @@ function App() {
 
       {/* MAIN CONTENT */}
       <main className="flex-1 flex flex-col p-4 md:p-6 pt-10 gap-6 overflow-y-auto lg:overflow-hidden bg-[#fcfcfc]">
-        {apiError && (
-          <div className="flex items-center gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm">
-            <span className="material-symbols-outlined text-amber-600 shrink-0">error</span>
-            <span>서버 연결에 실패했습니다. 잠시 후 새로고침하거나 관리자에게 문의해 주세요.</span>
-          </div>
-        )}
         <div className={`lg:flex-1 grid gap-6 lg:overflow-hidden shrink-0 h-auto lg:h-full ${userLevel === 2 ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'}`}>
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-hidden min-h-[500px] lg:min-h-0">
             <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white flex-wrap h-auto">
@@ -497,8 +516,10 @@ function App() {
         <footer className="flex items-center justify-between py-1 text-[10px] text-slate-300 uppercase tracking-widest font-bold shrink-0">
           <div>© Hankook Research. All rights reserved. | Website Manager: Solution Division 2 (esha / jychoi)</div>
         </footer>
-      </main >
-    </div >
+      </main>
+      </div>
+      {isChatbotEnabled() ? <FloatingChatbot /> : null}
+    </div>
   );
 }
 

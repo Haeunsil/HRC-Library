@@ -47,30 +47,30 @@
             var isProd = /^webdemo(?:test)?\.hrcglobal\.com$/.test(location.hostname);
             var isDev = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') && !isProd;
             var url = isProd ? (base || '/HRClib') + '/api_proxy.aspx?_path=' + encodeURIComponent('/api/get_init') : (isDev ? 'http://localhost:8000/api/get_init' : '/api/get_init');
-            window.__INIT_PREFETCH__ = fetch(url, { credentials: 'omit' }).then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; });
+            window.__INIT_PREFETCH__ = fetch(url, { credentials: 'omit', cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; });
             // 배포 버전 검사: 서버에 새 버전이 있으면 강제 새로고침 (캐시된 구버전 방지)
             if (isProd) {
                 var metaVer = document.querySelector('meta[name="build-version"]')?.content;
                 var verUrl = (base || '/HRClib').replace(/\/$/, '') + '/dist/version.json?t=' + Date.now();
                 var reloadKey = 'hrclib_version_reload';
+                var appendCacheBust = function(){ var q = location.search || ''; var sep = q ? '&' : '?'; return location.pathname + q + sep + '_v=' + Date.now(); };
                 fetch(verUrl, { cache: 'no-store', credentials: 'omit' }).then(function(r){
                     if (!r.ok) {
-                        if (!sessionStorage.getItem(reloadKey)) { sessionStorage.setItem(reloadKey, '1'); window.location.replace(location.pathname + (location.search ? '&' : '?') + '_v=' + Date.now()); }
+                        if (!sessionStorage.getItem(reloadKey)) { sessionStorage.setItem(reloadKey, '1'); window.location.replace(appendCacheBust()); }
                         return null;
                     }
                     return r.json();
                 }).then(function(data){
                     if (data && data.v && metaVer && data.v !== metaVer) {
-                        var u = location.pathname + (location.search ? '&' : '?') + '_v=' + Date.now();
-                        window.location.replace(u);
+                        window.location.replace(appendCacheBust());
                     } else if (data && data.v) { sessionStorage.removeItem(reloadKey); }
                 }).catch(function(){
-                    if (!sessionStorage.getItem(reloadKey)) { sessionStorage.setItem(reloadKey, '1'); window.location.replace(location.pathname + (location.search ? '&' : '?') + '_v=' + Date.now()); }
+                    if (!sessionStorage.getItem(reloadKey)) { sessionStorage.setItem(reloadKey, '1'); window.location.replace(appendCacheBust()); }
                 });
                 // 스크립트 로드 실패(404 등) 시 새로고침
                 window.addEventListener('error', function(e){
                     if (e.target && e.target.tagName === 'SCRIPT' && e.target.src && (e.target.src.indexOf('/assets/') >= 0 || e.target.src.indexOf('assets/') >= 0)) {
-                        if (!sessionStorage.getItem(reloadKey)) { sessionStorage.setItem(reloadKey, '1'); window.location.replace(location.pathname + (location.search ? '&' : '?') + '_v=' + Date.now()); }
+                        if (!sessionStorage.getItem(reloadKey)) { sessionStorage.setItem(reloadKey, '1'); window.location.replace(appendCacheBust()); }
                     }
                 }, true);
             }

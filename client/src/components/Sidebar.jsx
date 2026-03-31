@@ -3,11 +3,58 @@ import { noticeItems } from '../data/noticeItems';
 import { sampleUpdateItems } from '../data/sampleUpdateItems';
 import { getCategoryLabel } from '../data/koreanNames';
 import { submitInquiry, submitAddQuestion } from '../api';
+import { MANUAL_OPEN_PATH } from '../config/manualOpenPath';
+
+/** questionTag에서 [내용] 형태를 태그 배열로 분리 (나머지 문자열은 plain) */
+function parseBracketTags(raw) {
+    if (!raw || typeof raw !== 'string') return { tags: [], plain: '' };
+    const tags = [];
+    const re = /\[([^\]]*)\]/g;
+    let m;
+    while ((m = re.exec(raw)) !== null) {
+        const t = m[1].trim();
+        if (t) tags.push(t);
+    }
+    const plain = raw.replace(/\[[^\]]*\]/g, '').replace(/\s+/g, ' ').trim();
+    return { tags, plain };
+}
+
+/** Update 모달 등: [] 태그를 사이드바 카테고리 항목과 동일한 칩 스타일로 표시 */
+function BracketTagContent({ value, variant = 'body' }) {
+    const { tags, plain } = parseBracketTags(value || '');
+    const hasBracketTags = tags.length > 0;
+    const isTitle = variant === 'title';
+    if (!hasBracketTags) {
+        return (
+            <div className={`text-sm leading-relaxed ${isTitle ? 'font-semibold text-slate-700' : 'text-slate-600'}`}>
+                {value}
+            </div>
+        );
+    }
+    const plainCls = isTitle
+        ? 'text-sm text-slate-700 font-semibold leading-snug break-words'
+        : 'text-sm text-slate-700 font-medium leading-snug break-words';
+    return (
+        <div className="flex flex-col gap-1.5">
+            {plain ? <span className={plainCls}>{plain}</span> : null}
+            <div className="flex flex-wrap gap-1">
+                {tags.map((t, i) => (
+                    <span
+                        key={i}
+                        className="inline-flex max-w-full items-center rounded-md px-1.5 py-0.5 text-[11px] font-medium leading-tight break-words bg-slate-100 text-slate-600 ring-1 ring-slate-200/80"
+                    >
+                        {t}
+                    </span>
+                ))}
+            </div>
+        </div>
+    );
+}
 
 const Sidebar = ({ onSelect, selectedQnum, searchTerm = '', categories = [], categoryData = {} }) => {
     const [expandedCategories, setExpandedCategories] = useState({});
-    const [noticeExpanded, setNoticeExpanded] = useState(false);
-    const [sampleUpdateExpanded, setSampleUpdateExpanded] = useState(false);
+    const [noticeOpen, setNoticeOpen] = useState(false);
+    const [sampleUpdateOpen, setSampleUpdateOpen] = useState(false);
     const [libraryExpanded, setLibraryExpanded] = useState(true);
     const [inquiryOpen, setInquiryOpen] = useState(false);
     const [inquiryForm, setInquiryForm] = useState({ email: '', message: '' });
@@ -20,39 +67,38 @@ const Sidebar = ({ onSelect, selectedQnum, searchTerm = '', categories = [], cat
     const [noticeRead, setNoticeRead] = useState(false);
     const [sampleUpdateRead, setSampleUpdateRead] = useState(false);
 
-    // Auto-expand category if a question is selected externally
+    // 선택한 문항의 카테고리만 펼침 (이전 카테고리는 모두 접힘)
     useEffect(() => {
         if (!selectedQnum || Object.keys(categoryData).length === 0) return;
 
-        // Find which category contains this qnum
         const cats = Object.keys(categoryData);
         for (let cat of cats) {
             const list = categoryData[cat];
             const found = list.find(q => q.qnum === selectedQnum);
             if (found) {
-                setExpandedCategories(prev => ({ ...prev, [cat]: true }));
+                setExpandedCategories({ [cat]: true });
                 break;
             }
         }
     }, [selectedQnum, categoryData]);
 
+    /** 한 번에 하나의 카테고리만 펼침 (다른 카테고리는 모두 접힘) */
     const toggleCategory = (cat) => {
-        setExpandedCategories(prev => ({
-            ...prev,
-            [cat]: !prev[cat]
-        }));
+        setExpandedCategories(prev => {
+            if (prev[cat]) return { [cat]: false };
+            return { [cat]: true };
+        });
     };
 
     return (
-        <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
-            {/* 공지사항 */}
+        <nav className="flex flex-col flex-1 min-h-0 px-4 py-4">
+            {/* 스크롤 영역: 공지·Update·Sample 목록 */}
+            <div className="flex-1 overflow-y-auto space-y-6 min-h-0">
+            {/* 공지사항 - 클릭 시 모달 */}
             <div className="space-y-2">
                 <div
                     className="flex items-center justify-between px-3 py-1.5 text-slate-900 cursor-pointer hover:bg-slate-50 rounded-md transition-colors"
-                    onClick={() => {
-                        setNoticeExpanded(!noticeExpanded);
-                        if (noticeItems.length > 0) setNoticeRead(true);
-                    }}
+                    onClick={() => { setNoticeOpen(true); if (noticeItems.length > 0) setNoticeRead(true); }}
                 >
                     <div className="flex items-center gap-3">
                         <div className="relative">
@@ -66,34 +112,15 @@ const Sidebar = ({ onSelect, selectedQnum, searchTerm = '', categories = [], cat
                         </div>
                         <span className="text-[14px] font-bold uppercase tracking-wider whitespace-nowrap">공지사항</span>
                     </div>
-                    <span className={`material-symbols-outlined text-slate-400 text-lg transition-transform ${noticeExpanded ? 'rotate-180' : ''}`}>expand_more</span>
+                    <span className="material-symbols-outlined text-slate-400 text-base">open_in_new</span>
                 </div>
-                {noticeExpanded && (
-                    <div className="ml-3 pl-3 border-l border-slate-100 space-y-3 mt-1">
-                       {/*<h4 className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">업데이트 내용</h4> */}
-                        {noticeItems.length > 0 ? (
-                            noticeItems.map((item, i) => (
-                                <div key={i} className="px-3 py-2 rounded-md bg-slate-50/80 text-[12px]">
-                                    <div className="font-semibold text-slate-700 mb-0.5">{item.title}</div>
-                                    <div className="text-[11px] text-slate-500 mb-1">{item.date}</div>
-                                    <div className="text-slate-600 leading-relaxed">{item.desc}</div>
-                                </div>
-                            ))
-                        ) : (
-                            <div className="px-3 py-2 text-xs text-slate-400 italic">등록된 공지가 없습니다.</div>
-                        )}
-                    </div>
-                )}
             </div>
 
-            {/* SAMPLE 업데이트 내역 */}
+            {/* SAMPLE 업데이트 내역 - 클릭 시 모달 */}
             <div className="space-y-2">
                 <div
                     className="flex items-center justify-between px-3 py-1.5 text-slate-900 cursor-pointer hover:bg-slate-50 rounded-md transition-colors"
-                    onClick={() => {
-                        setSampleUpdateExpanded(!sampleUpdateExpanded);
-                        if (sampleUpdateItems.length > 0) setSampleUpdateRead(true);
-                    }}
+                    onClick={() => { setSampleUpdateOpen(true); if (sampleUpdateItems.length > 0) setSampleUpdateRead(true); }}
                 >
                     <div className="flex items-center gap-3">
                         <div className="relative">
@@ -107,23 +134,8 @@ const Sidebar = ({ onSelect, selectedQnum, searchTerm = '', categories = [], cat
                         </div>
                         <span className="text-[14px] font-bold uppercase tracking-wider whitespace-nowrap">Update</span>
                     </div>
-                    <span className={`material-symbols-outlined text-slate-400 text-lg transition-transform ${sampleUpdateExpanded ? 'rotate-180' : ''}`}>expand_more</span>
+                    <span className="material-symbols-outlined text-slate-400 text-base">open_in_new</span>
                 </div>
-                {sampleUpdateExpanded && (
-                    <div className="ml-3 pl-3 border-l border-slate-100 space-y-3 mt-1">
-                        {sampleUpdateItems.length > 0 ? (
-                            sampleUpdateItems.map((item, i) => (
-                                <div key={i} className="px-3 py-2 rounded-md bg-slate-50/80 text-[12px]">
-                                    <div className="font-semibold text-slate-700 mb-0.5">{item.title}</div>
-                                    <div className="text-[11px] text-slate-500 mb-1">{item.date}</div>
-                                    <div className="text-slate-600 leading-relaxed">{item.desc}</div>
-                                </div>
-                            ))
-                        ) : (
-                            <div className="px-3 py-2 text-xs text-slate-400 italic">등록된 업데이트 내역이 없습니다.</div>
-                        )}
-                    </div>
-                )}
             </div>
 
             {/* Library - 공지사항과 동일 스타일, 접기/펼치기 */}
@@ -136,7 +148,7 @@ const Sidebar = ({ onSelect, selectedQnum, searchTerm = '', categories = [], cat
                         <span className="material-symbols-outlined text-red-700 text-xl">menu_book</span>
                         <span className="text-[14px] font-bold uppercase tracking-wider whitespace-nowrap">Sample</span>
                     </div>
-                    <span className={`material-symbols-outlined text-slate-400 text-lg transition-transform ${libraryExpanded ? 'rotate-180' : ''}`}>expand_more</span>
+                    <span className={`material-symbols-outlined text-slate-400 text-base transition-transform ${libraryExpanded ? 'rotate-180' : ''}`}>expand_more</span>
                 </div>
                 {libraryExpanded && (
                 <div className="ml-3 pl-3 border-l border-slate-100 space-y-1 mt-1">
@@ -156,7 +168,9 @@ const Sidebar = ({ onSelect, selectedQnum, searchTerm = '', categories = [], cat
                         // Skip empty categories if searching
                         if (searchTerm && questions.length === 0) return null;
 
-                        const isExpanded = searchTerm ? true : expandedCategories[cat];
+                        const trimmedSearch = (searchTerm || '').trim();
+                        // 검색 중: 매칭된 카테고리는 선택 없이도 모두 펼침 / 검색 없음: 기존처럼 선택·토글만 반영
+                        const isExpanded = trimmedSearch ? true : Boolean(expandedCategories[cat]);
                         const label = getCategoryLabel(cat);
 
                         return (
@@ -169,29 +183,55 @@ const Sidebar = ({ onSelect, selectedQnum, searchTerm = '', categories = [], cat
                                         <span className="material-symbols-outlined text-red-700 text-xl">folder_open</span>
                                         <span className="text-[14px] font-bold uppercase tracking-wider whitespace-nowrap">{label}</span>
                                     </div>
-                                    <span className={`material-symbols-outlined text-slate-400 text-lg transition-transform ${isExpanded ? 'rotate-180' : ''}`}>expand_more</span>
+                                    <span className={`material-symbols-outlined text-slate-400 text-base transition-transform ${isExpanded ? 'rotate-180' : ''}`}>expand_more</span>
                                 </div>
 
                                 {isExpanded && (
                                     <div className="ml-3 pl-3 border-l border-slate-100 space-y-1 mt-1">
                                         {questions.map(q => {
                                             const isSelected = q.qnum === selectedQnum;
+                                            const raw = q.questionTag || '';
+                                            const { tags: tagList, plain } = parseBracketTags(raw);
+                                            const hasBracketTags = tagList.length > 0;
                                             return (
                                                 <div
                                                     key={q.qnum}
                                                     onClick={() => onSelect({ value: q.qnum, category: cat })}
                                                     className={`
-                                                        flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer text-[12px] font-semibold relative overflow-hidden transition-colors
+                                                        flex items-start gap-3 px-3 py-2 rounded-md cursor-pointer text-[12px] relative overflow-hidden transition-colors
                                                         ${isSelected
                                                             ? 'bg-red-50 text-red-700'
                                                             : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'}
                                                     `}
                                                 >
                                                     {isSelected && <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-700"></div>}
-                                                    <span className="material-symbols-outlined text-lg shrink-0">
+                                                    <span className={`material-symbols-outlined text-lg shrink-0 ${hasBracketTags ? 'mt-0.5' : ''}`}>
                                                         {isSelected ? 'task_alt' : 'description'}
                                                     </span>
-                                                    <span className="whitespace-nowrap">{q.questionTag || q.qnum}</span>
+                                                    {hasBracketTags ? (
+                                                        <div className="min-w-0 flex-1 flex flex-col gap-1.5">
+                                                            <span className={`font-semibold text-[12px] leading-snug break-words ${isSelected ? 'text-red-800' : 'text-slate-800'}`}>
+                                                                {plain || q.qnum}
+                                                            </span>
+                                                            <div className="flex flex-wrap gap-1">
+                                                                {tagList.map((t, i) => (
+                                                                    <span
+                                                                        key={i}
+                                                                        className={`
+                                                                            inline-flex max-w-full items-center rounded-md px-1.5 py-0.5 text-[11px] font-medium leading-tight break-words
+                                                                            ${isSelected
+                                                                                ? 'bg-red-100/90 text-red-900 ring-1 ring-red-200/60'
+                                                                                : 'bg-slate-100 text-slate-600 ring-1 ring-slate-200/80'}
+                                                                        `}
+                                                                    >
+                                                                        {t}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="font-semibold whitespace-nowrap truncate min-w-0">{raw || q.qnum}</span>
+                                                    )}
                                                 </div>
                                             );
                                         })}
@@ -205,25 +245,126 @@ const Sidebar = ({ onSelect, selectedQnum, searchTerm = '', categories = [], cat
                     })}
                 </div>
                 )}
-
-                {/* 문항추가, 문의하기 - Library 맨 아래 */}
-                <div className="mt-6 pt-4 border-t border-slate-100 space-y-2">
-                    <button
-                        onClick={() => { setAddQuestionOpen(true); setAddQuestionStatus(null); setAddQuestionError(''); }}
-                        className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-red-700 text-white text-[13px] font-semibold rounded-lg hover:bg-red-800 transition-colors"
-                    >
-                        <span className="material-symbols-outlined text-lg">add_circle</span>
-                        샘플 추가
-                    </button>
-                    <button
-                        onClick={() => { setInquiryOpen(true); setInquiryStatus(null); setInquiryError(''); }}
-                        className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-red-700 text-white text-[13px] font-semibold rounded-lg hover:bg-red-800 transition-colors"
-                    >
-                        <span className="material-symbols-outlined text-lg">mail</span>
-                        문의하기
-                    </button>
-                </div>
             </div>
+            </div>
+
+            {/* 매뉴얼·샘플추가·문의하기 - 하단 고정 (스크롤 없이 항상 표시) */}
+            <div className="shrink-0 flex-shrink-0 pt-4 mt-4 border-t border-slate-100 space-y-2 pb-4">
+                <button
+                    type="button"
+                    onClick={async () => {
+                        const p = (MANUAL_OPEN_PATH || '').trim();
+                        if (!p) {
+                            alert('매뉴얼 경로가 설정되지 않았습니다.\nclient/src/config/manualOpenPath.js 파일의 MANUAL_OPEN_PATH에 경로를 입력하세요.');
+                            return;
+                        }
+                        try {
+                            await navigator.clipboard.writeText(p);
+                        } catch {
+                            try {
+                                const ta = document.createElement('textarea');
+                                ta.value = p;
+                                ta.setAttribute('readonly', '');
+                                ta.style.position = 'fixed';
+                                ta.style.left = '-9999px';
+                                document.body.appendChild(ta);
+                                ta.select();
+                                document.execCommand('copy');
+                                document.body.removeChild(ta);
+                            } catch {
+                                alert('복사에 실패했습니다. 브라우저에서 클립보드 권한을 허용해 주세요.');
+                                return;
+                            }
+                        }
+                        alert('경로가 복사되었습니다.\n파일 탐색기 주소창에 붙여넣기(Ctrl+V) 후 Enter로 폴더를 열 수 있습니다.');
+                    }}
+                    className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-red-700 text-white text-[13px] font-semibold rounded-lg hover:bg-red-800 transition-colors"
+                >
+                    <span className="material-symbols-outlined text-lg">content_copy</span>
+                    매뉴얼
+                </button>
+                <button
+                    onClick={() => { setAddQuestionOpen(true); setAddQuestionStatus(null); setAddQuestionError(''); }}
+                    className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-red-700 text-white text-[13px] font-semibold rounded-lg hover:bg-red-800 transition-colors"
+                >
+                    <span className="material-symbols-outlined text-lg">add_circle</span>
+                    샘플 추가
+                </button>
+                <button
+                    onClick={() => { setInquiryOpen(true); setInquiryStatus(null); setInquiryError(''); }}
+                    className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-red-700 text-white text-[13px] font-semibold rounded-lg hover:bg-red-800 transition-colors"
+                >
+                    <span className="material-symbols-outlined text-lg">mail</span>
+                    문의하기
+                </button>
+            </div>
+
+            {/* 공지사항 모달 */}
+            {noticeOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40" onClick={() => setNoticeOpen(false)}>
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-xl max-h-[85vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
+                            <h3 className="text-lg font-bold text-slate-800">공지사항</h3>
+                            <button onClick={() => setNoticeOpen(false)} className="p-1 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors" aria-label="닫기">
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                        <div className="p-6 overflow-y-auto space-y-3 flex-1">
+                            {noticeItems.length > 0 ? (
+                                noticeItems.map((item, i) => (
+                                    <div key={i} className="px-3 py-2 rounded-md bg-slate-50/80 text-sm">
+                                        <div className="font-semibold text-slate-700 mb-0.5">{item.title}</div>
+                                        <div className="text-xs text-slate-500 mb-1">{item.date}</div>
+                                        <div className="text-slate-600 leading-relaxed">{item.desc}</div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="px-3 py-2 text-sm text-slate-400 italic">등록된 공지가 없습니다.</div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Update 모달 */}
+            {sampleUpdateOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40" onClick={() => setSampleUpdateOpen(false)}>
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[85vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
+                            <h3 className="text-lg font-bold text-slate-800">Update</h3>
+                            <button onClick={() => setSampleUpdateOpen(false)} className="p-1 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors" aria-label="닫기">
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                        <div className="p-6 overflow-y-auto space-y-3 flex-1">
+                            {sampleUpdateItems.length > 0 ? (
+                                sampleUpdateItems.map((item, i) => {
+                                    const hasTitleTags = parseBracketTags(item.title || '').tags.length > 0;
+                                    return (
+                                    <div
+                                        key={i}
+                                        onClick={() => { item.qnum && onSelect && onSelect({ value: item.qnum }); setSampleUpdateOpen(false); }}
+                                        className={`px-3 py-2 rounded-md text-sm ${item.qnum ? 'bg-slate-50/80 hover:bg-red-50 hover:border-red-200 cursor-pointer border border-transparent transition-colors' : 'bg-slate-50/80'}`}
+                                    >
+                                        <div className="mb-0.5">
+                                            {hasTitleTags ? (
+                                                <BracketTagContent value={item.title} variant="title" />
+                                            ) : (
+                                                <div className="font-semibold text-slate-700">{item.title}</div>
+                                            )}
+                                        </div>
+                                        <div className="text-xs text-slate-500 mb-1">{item.date}</div>
+                                        <BracketTagContent value={item.desc} variant="body" />
+                                    </div>
+                                    );
+                                })
+                            ) : (
+                                <div className="px-3 py-2 text-sm text-slate-400 italic">등록된 업데이트 내역이 없습니다.</div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* 문의하기 팝업 */}
             {inquiryOpen && (
@@ -256,7 +397,7 @@ const Sidebar = ({ onSelect, selectedQnum, searchTerm = '', categories = [], cat
                                 placeholder="문의 내용"
                                 value={inquiryForm.message}
                                 onChange={(e) => setInquiryForm(f => ({ ...f, message: e.target.value }))}
-                                rows={4}
+                                rows={12}
                                 className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-700/20 focus:border-red-700 resize-none"
                             />
                             <button

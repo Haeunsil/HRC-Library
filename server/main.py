@@ -96,6 +96,25 @@ async def global_exception_handler(request: Request, exc: Exception):
 # GZip 압축: JSON 응답 크기 축소로 실서버 전송 시간 단축 (클라이언트가 Accept-Encoding: gzip 보낼 때)
 app.add_middleware(GZipMiddleware, minimum_size=500)
 
+# 정적 파일 no-cache: 배포 후 항상 최신 코드 로드 (index.html, version.json, assets)
+from starlette.middleware.base import BaseHTTPMiddleware
+
+
+class NoCacheStaticMiddleware(BaseHTTPMiddleware):
+    """API가 아닌 정적 파일 응답에 Cache-Control no-cache 헤더 추가"""
+
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        path = request.scope.get("path", "")
+        if not path.startswith("/api"):
+            response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+            response.headers["Pragma"] = "no-cache"
+            response.headers["Expires"] = "0"
+        return response
+
+
+app.add_middleware(NoCacheStaticMiddleware)
+
 # CORS (Cross-Origin Resource Sharing) 설정
 app.add_middleware(
     CORSMiddleware,
@@ -131,6 +150,11 @@ class AddQuestionRequest(BaseModel):
     tag: str = ""            # 태그 (적용되는 속성 e.g. 랜덤고정, 대분류제시 등)
     code: str = ""           # 코드
     remarks: Optional[str] = None  # 비고 (null 가능)
+
+
+class RagChatRequest(BaseModel):
+    """RAG 챗봇: 사용자 메시지"""
+    message: str = ""
 
 
 def _send_inquiry_email(subject: str, text: str, body_name: str, email_val: str) -> None:
@@ -745,8 +769,29 @@ def search_questions(q: str = Query(..., description="검색어")):
     finally:
         conn.close()
 
+
+import rag_chat
+
+
+def _rag_chat_enabled() -> bool:
+    """ENABLE_RAG_CHAT=0|false|no|off 이면 비활성 (미설정 시 활성, 기존 배포와 동일)."""
+    v = (os.getenv("ENABLE_RAG_CHAT") or "1").strip().lower()
+    return v not in ("0", "false", "no", "off")
+
+
+@app.post("/api/chat/rag")
+def api_chat_rag(body: RagChatRequest):
+    """RAG 테스트: client/docs/rag 매뉴얼 MD 기반 검색 + 선택적 OpenAI 답변."""
+    if not _rag_chat_enabled():
+        raise HTTPException(status_code=404, detail="RAG 챗봇이 비활성화되어 있습니다.")
+    msg = (body.message or "").strip()
+    if not msg:
+        raise HTTPException(status_code=400, detail="message가 비었습니다.")
+    rag_base = os.path.dirname(os.path.abspath(__file__))
+    return rag_chat.rag_query(msg, rag_base)
+
+
 # 배포 환경 설정: 정적 파일 서빙 (React 빌드 파일)
-import os
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 

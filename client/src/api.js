@@ -27,6 +27,7 @@ const isHtmlResponse = (data) =>
 const api = axios.create({
     baseURL: isLocal ? API_BASE : `${basePathCandidates[0] || basePath}/api_proxy.aspx`,
     timeout: 30000,
+    validateStatus: (status) => status >= 200 && status < 300, // 4xx/5xx → reject (서버 다운 시 안내 표시)
 });
 
 // 배포 환경: HTML 응답 시 다른 basePath로 재시도
@@ -50,17 +51,30 @@ api.interceptors.request.use((config) => {
     return config;
 }, (error) => Promise.reject(error));
 
+// 초기 연결 감지용 짧은 타임아웃 (서버 다운 시 빠른 안내)
+const INIT_TIMEOUT_MS = 8000;
+
+// 네트워크/연결 오류 여부 (폴백 재시도 생략 → 빠른 실패)
+const isNetworkError = (err) => {
+    const code = err?.code || '';
+    const msg = (err?.message || '').toLowerCase();
+    return !!(code && (code === 'ECONNREFUSED' || code === 'ETIMEDOUT' || code === 'ERR_NETWORK' || code === 'ENOTFOUND')) ||
+        msg.includes('network') || msg.includes('timeout') || msg.includes('econnrefused') || msg.includes('enotfound');
+};
+
 // basePath 후보별로 API 요청 시도 (HTML 응답 시 다음 후보로 재시도)
 let _workingBasePath = null;
-async function apiWithFallback(path) {
+async function apiWithFallback(path, timeoutMs = 30000) {
     const candidates = _workingBasePath ? [_workingBasePath] : basePathCandidates;
     for (let i = 0; i < candidates.length; i++) {
         const base = `${candidates[i]}/api_proxy.aspx`;
         try {
             const res = await axios.get(base, {
                 params: { _path: path },
-                timeout: 30000,
+                timeout: timeoutMs,
+                validateStatus: () => true, // 4xx/5xx도 resolve하도록 한 뒤 아래에서 throw
             });
+            if (res.status >= 400) throw new Error(`API ${res.status}`);
             if (!isHtmlResponse(res?.data)) {
                 if (!_workingBasePath) _workingBasePath = candidates[i];
                 api.defaults.baseURL = base;
@@ -87,11 +101,12 @@ let _searchAbortController = null;
 
 /**
  * 초기 로딩용: summary + types를 한 번에 가져옵니다.
- * 실서버 지연 개선: API 호출 2회 → 1회로 축소
- * @returns {{ summary: Array, types: Array }}
+ * @param {string} path - API 경로
+ * @param {{ timeout?: number }} options - timeout(ms) 등
  */
-function prodGet(path) {
-    return isLocal ? api.get(path) : apiWithFallback(path);
+function prodGet(path, options = {}) {
+    const timeout = options.timeout ?? 30000;
+    return isLocal ? api.get(path, { timeout }) : apiWithFallback(path, timeout);
 }
 
 export const getInitData = async () => {
@@ -107,7 +122,7 @@ export const getInitData = async () => {
                     _initCache = { summary: data.summary, types: data.types };
                     return _initCache;
                 }
-                return prodGet('/api/get_init').then((response) => {
+                return prodGet('/api/get_init', { timeout: INIT_TIMEOUT_MS }).then((response) => {
                     const d = response?.data;
                     if (d && Array.isArray(d.summary) && Array.isArray(d.types)) {
                         _summaryCache = d.summary;
@@ -118,6 +133,11 @@ export const getInitData = async () => {
                     console.error("getInitData에서 예상치 못한 응답:", d);
                     throw new Error("Invalid get_init response");
                 }).catch(async (err) => {
+                    if (isNetworkError(err)) {
+                        console.warn("get_init 연결 실패 (서버 다운):", err?.message || err);
+                        _initCache = { summary: [], types: [], apiError: true };
+                        return _initCache;
+                    }
                     console.warn("get_init 실패, 폴백 시도:", err?.message || err);
                     try {
                         const [summary, types] = await Promise.all([
@@ -137,7 +157,7 @@ export const getInitData = async () => {
             }).finally(() => { _initPromise = null; });
         }
         if (!_initPromise) {
-            _initPromise = prodGet('/api/get_init')
+            _initPromise = prodGet('/api/get_init', { timeout: INIT_TIMEOUT_MS })
                 .then((response) => {
                     const d = response?.data;
                     if (d && Array.isArray(d.summary) && Array.isArray(d.types)) {
@@ -150,6 +170,11 @@ export const getInitData = async () => {
                     throw new Error("Invalid get_init response");
                 })
                 .catch(async (err) => {
+                    if (isNetworkError(err)) {
+                        console.warn("get_init 연결 실패 (서버 다운):", err?.message || err);
+                        _initCache = { summary: [], types: [], apiError: true };
+                        return _initCache;
+                    }
                     console.warn("get_init 실패, 폴백 시도:", err?.message || err);
                     try {
                         const [summary, types] = await Promise.all([
@@ -372,5 +397,14 @@ export const submitInquiry = async (data) => {
  */
 export const submitAddQuestion = async (data) => {
     const res = await api.post('/api/add_question', data);
+    return res?.data;
+};
+
+/**
+ * RAG 챗봇 (매뉴얼 MD 테스트): { reply, sources, mode, manual_path?, error? }
+ * @param {string} message
+ */
+export const ragChat = async (message) => {
+    const res = await api.post('/api/chat/rag', { message });
     return res?.data;
 };
