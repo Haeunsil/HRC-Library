@@ -3,9 +3,14 @@ import Sidebar from './components/Sidebar';
 import FloatingChatbot from './components/FloatingChatbot';
 import ViewPanel from './components/ViewPanel';
 import CodePanel from './components/CodePanel';
-import { getInitData, getQuestionDetail } from './api';
+import AddressCodeDownloadPanel from './components/AddressCodeDownloadPanel';
+import AddressSidoCustomDownloadPanel from './components/AddressSidoCustomDownloadPanel';
+import AddressCodebookSection from './components/AddressCodebookSection';
+import SampleScriptViewerPanel from './components/SampleScriptViewerPanel';
+import { getInitData, getQuestionDetail, searchQuestions } from './api';
 import { getCategoryLabel } from './data/koreanNames';
 import { safeStorage } from './utils/safeStorage';
+import { formatQnumDisplay } from './utils/qnumDisplay';
 
 // 표시용 URL: 파라미터만 숨김. /dist/는 유지 (webdemotest에서 /HRClib/는 다른 앱 → 새로고침 시 /HRClib/dist/ 필요)
 const getCleanDisplayUrl = () => {
@@ -16,11 +21,22 @@ const getCleanDisplayUrl = () => {
 
 const isLocal = () => window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
-/** 빌드 시 VITE_ENABLE_CHATBOT=0|false|no|off 이면 플로팅 챗봇 미표시 (미설정 시 표시). */
-const isChatbotEnabled = () => {
-  const v = String(import.meta.env.VITE_ENABLE_CHATBOT ?? 'true').trim().toLowerCase();
+/**
+ * Vite 빌드 타임 플래그. 미설정 시 기본은 활성(true).
+ * 비활성 값(대소문자 무시): 0, false, no, off
+ */
+const isViteFeatureOn = (key, defaultWhenUnset = true) => {
+  const v = String(import.meta.env[key] ?? (defaultWhenUnset ? 'true' : 'false'))
+    .trim()
+    .toLowerCase();
   return !['0', 'false', 'no', 'off'].includes(v);
 };
+
+/** VITE_ENABLE_CHATBOT — off 시 아이콘만·곧 공개 예정 패널 */
+const isChatbotEnabled = () => isViteFeatureOn('VITE_ENABLE_CHATBOT');
+
+/** VITE_ENABLE_ADDRESS — off 시 사이드바 Address 메뉴 숨김 (챗봇과 독립) */
+const isAddressMenuEnabled = () => isViteFeatureOn('VITE_ENABLE_ADDRESS');
 
 // usercode 검증: query 또는 storage (localStorage 우선 - 새로고침 시 복원)
 const hasValidUsercode = () => {
@@ -100,6 +116,21 @@ function App() {
   const [categoryData, setCategoryData] = useState({});
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [apiError, setApiError] = useState(false);
+  /** 사이드바「주소 코드 받기」→ 메인 전체 패널 */
+  const [addressCodeDownloadMainOpen, setAddressCodeDownloadMainOpen] = useState(false);
+  /** 시도 순서 Custom — 기존 코드 다운로드와 별도 전체 패널 */
+  const [addressCodeDownloadCustomMainOpen, setAddressCodeDownloadCustomMainOpen] = useState(false);
+  /** Custom 패널 CodeBook 구분 — 행정동 메뉴: admin, 법정동 메뉴: legal */
+  const [addressCodeDownloadCustomKind, setAddressCodeDownloadCustomKind] = useState(/** @type {'admin' | 'legal' | null} */ (null));
+  /** null: 행정/법정 둘 다 선택 가능 · 'admin'|'legal': 해당 카테고리만 */
+  const [addressDownloadKind, setAddressDownloadKind] = useState(null);
+  /** 행정동·법정동 하위「CodeBook」→ 메인 전용 패널 */
+  const [addressCodebookMainOpen, setAddressCodebookMainOpen] = useState(false);
+  const [addressCodebookKind, setAddressCodebookKind] = useState(null);
+  /** Address 하위 탭 id (문항 클릭 시). address_other 만 Preview·Source 표시 */
+  const [selectedAddressSub, setSelectedAddressSub] = useState(null);
+  /** 사이드바 Sample 카테고리「Script 확인」→ 메인 전체 패널 (library-script.txt 1파일) */
+  const [sampleScriptViewerOpen, setSampleScriptViewerOpen] = useState(false);
 
   // URL 파라미터를 숨김: params → localStorage → clean URL로 replace (새로고침 시 복원)
   // selectedQnum: sessionStorage만 사용 (창 닫으면 선택 초기화)
@@ -150,8 +181,12 @@ function App() {
   const [viewMode, setViewMode] = useState('pc'); // pc, mobile, mobile-land
 
   // CodePanel State Lifted
-  const [activeTab, setActiveTab] = useState('qm'); // 'qm' or 'perl'
+  const [activeTab, setActiveTab] = useState('qm'); // 'qm' | 'perl'
   const [engine, setEngine] = useState('question'); // 'question' or 'condition' (for Perl)
+
+  const [searchTerm, setSearchTerm] = useState('');
+  /** 검색어 2글자 이상: 서버에서 태그·작성자·코드(QM/Perl) 매칭 qnum 집합 */
+  const [searchHitQnums, setSearchHitQnums] = useState(() => new Set());
 
   useEffect(() => {
     let cancelled = false;
@@ -191,6 +226,31 @@ function App() {
     return () => { cancelled = true; };
   }, []);
 
+  useEffect(() => {
+    const t = (searchTerm || '').trim();
+    if (t.length < 2) {
+      setSearchHitQnums(new Set());
+      return;
+    }
+    setSearchHitQnums(new Set());
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      const rows = await searchQuestions(t);
+      if (!cancelled && Array.isArray(rows)) {
+        setSearchHitQnums(new Set(rows.map((r) => r.qnum)));
+      }
+    }, 320);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [searchTerm]);
+
+  // 검색 중에는 전체 Script 확인 패널 닫기 (사이드바 버튼도 숨김과 동일 동작)
+  useEffect(() => {
+    if ((searchTerm || '').trim()) setSampleScriptViewerOpen(false);
+  }, [searchTerm]);
+
   // selectedQnum 변경 시: 이미 로드된 dbData에서 즉시 반영 (전체 재호출 금지)
   useEffect(() => {
     if (!selectedQnum) return;
@@ -219,10 +279,25 @@ function App() {
   }, [selectedQnum, dbData]);
 
   const handleSelect = (partial) => {
+    setSampleScriptViewerOpen(false);
     const qnum = partial.qnum || partial.value;
     setSelectedQnum(qnum);
     const data = dbData[qnum] || partial;
     setFullQuestionData(data);
+
+    if (partial.addressSub != null && partial.addressSub !== undefined) {
+      setSelectedAddressSub(partial.addressSub);
+    } else {
+      setSelectedAddressSub(null);
+    }
+    if (qnum) {
+      setAddressCodeDownloadMainOpen(false);
+      setAddressDownloadKind(null);
+      setAddressCodeDownloadCustomMainOpen(false);
+      setAddressCodeDownloadCustomKind(null);
+      setAddressCodebookMainOpen(false);
+      setAddressCodebookKind(null);
+    }
 
     // Update Category from selection or data
     if (partial.category) {
@@ -261,9 +336,6 @@ function App() {
     copyToClipboard(text);
   };
 
-  /* Search State */
-  const [searchTerm, setSearchTerm] = useState('');
-
   // Dynamic Breadcrumb State
   const [selectedCategory, setSelectedCategory] = useState('');
 
@@ -293,6 +365,13 @@ function App() {
     safeStorage.removeItem('selectedQnum');
     window.location.reload();
   };
+
+  const showQuestionPreviewAndSource =
+    !addressCodeDownloadMainOpen &&
+    !addressCodeDownloadCustomMainOpen &&
+    !addressCodebookMainOpen &&
+    !sampleScriptViewerOpen &&
+    !(selectedAddressSub != null && selectedAddressSub !== 'address_other');
 
   return (
     <div className="flex flex-col h-dvh md:h-screen overflow-hidden bg-[#fcfcfc] font-sans text-slate-800">
@@ -343,7 +422,7 @@ function App() {
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg group-focus-within/search:text-red-700 transition-colors">search</span>
             <input
               className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-700/10 focus:border-red-700 transition-all text-sm placeholder:text-slate-400"
-              placeholder="Find Sample..."
+              placeholder="태그, 코드, 작성자 내용 검색…"
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -356,15 +435,226 @@ function App() {
           onSelect={handleSelect}
           selectedQnum={selectedQnum}
           searchTerm={searchTerm}
+          searchHitQnums={searchHitQnums}
           categories={categories}
           categoryData={categoryData}
+          showAddressMenu={isAddressMenuEnabled()}
+          onOpenSampleScript={() => {
+            setAddressCodeDownloadMainOpen(false);
+            setAddressDownloadKind(null);
+            setAddressCodeDownloadCustomMainOpen(false);
+            setAddressCodeDownloadCustomKind(null);
+            setAddressCodebookMainOpen(false);
+            setAddressCodebookKind(null);
+            setSampleScriptViewerOpen(true);
+          }}
+          onOpenAddressCodeDownload={(kind) => {
+            setSampleScriptViewerOpen(false);
+            setAddressCodeDownloadCustomMainOpen(false);
+            setAddressCodeDownloadCustomKind(null);
+            setAddressCodebookMainOpen(false);
+            setAddressCodebookKind(null);
+            if (addressCodeDownloadMainOpen) {
+              if (kind === 'admin' || kind === 'legal') {
+                if (addressDownloadKind === kind) {
+                  return;
+                }
+                setAddressDownloadKind(kind);
+                return;
+              }
+              return;
+            }
+            setAddressCodeDownloadMainOpen(true);
+            setAddressDownloadKind(kind === 'admin' || kind === 'legal' ? kind : null);
+          }}
+          onOpenAddressCodebook={(kind) => {
+            if (addressCodebookMainOpen && addressCodebookKind === kind) return;
+            setSampleScriptViewerOpen(false);
+            setAddressCodeDownloadMainOpen(false);
+            setAddressDownloadKind(null);
+            setAddressCodeDownloadCustomMainOpen(false);
+            setAddressCodeDownloadCustomKind(null);
+            setAddressCodebookMainOpen(true);
+            setAddressCodebookKind(kind === 'admin' || kind === 'legal' ? kind : null);
+          }}
+          onOpenAddressCodeDownloadCustom={(kind) => {
+            setSampleScriptViewerOpen(false);
+            setAddressCodeDownloadMainOpen(false);
+            setAddressDownloadKind(null);
+            setAddressCodebookMainOpen(false);
+            setAddressCodebookKind(null);
+            const k = kind === 'admin' || kind === 'legal' ? kind : 'legal';
+            if (addressCodeDownloadCustomMainOpen) {
+              if (addressCodeDownloadCustomKind === k) return;
+              setAddressCodeDownloadCustomKind(k);
+              return;
+            }
+            setAddressCodeDownloadCustomKind(k);
+            setAddressCodeDownloadCustomMainOpen(true);
+          }}
+          addressCodeDownloadMainOpen={addressCodeDownloadMainOpen}
+          addressCodeDownloadCustomMainOpen={addressCodeDownloadCustomMainOpen}
+          addressCodeDownloadCustomKind={addressCodeDownloadCustomKind}
+          addressDownloadKind={addressDownloadKind}
+          addressCodebookMainOpen={addressCodebookMainOpen}
+          addressCodebookKind={addressCodebookKind}
         />
 
 
       </aside>
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 flex flex-col p-4 md:p-6 pt-10 gap-6 overflow-y-auto lg:overflow-hidden bg-[#fcfcfc]">
+      <main className="flex flex-1 flex-col gap-6 overflow-y-auto bg-[#fcfcfc] p-4 pt-10 md:p-6 lg:overflow-hidden">
+        {sampleScriptViewerOpen ? (
+          <div className="lg:flex-1 flex flex-col min-h-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm min-h-[min(70vh,36rem)]">
+            <SampleScriptViewerPanel
+              userLevel={userLevel}
+              onClose={() => setSampleScriptViewerOpen(false)}
+              sidebarCollapsed={!isSidebarOpen}
+              onOpenSidebar={() => setIsSidebarOpen(true)}
+            />
+          </div>
+        ) : addressCodeDownloadCustomMainOpen ? (
+          <div className="lg:flex-1 flex flex-col min-h-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="shrink-0 flex items-center gap-3 px-4 py-3 border-b border-slate-100 bg-white flex-wrap">
+              {!isSidebarOpen && (
+                <button
+                  type="button"
+                  onClick={() => setIsSidebarOpen(true)}
+                  className="p-1 px-1.5 rounded-md hover:bg-slate-100 text-slate-500 transition-colors"
+                  title="Open Sidebar"
+                >
+                  <span className="material-symbols-outlined text-lg">menu</span>
+                </button>
+              )}
+              <span className="material-symbols-outlined text-red-700 text-xl shrink-0">tune</span>
+              <div className="min-w-0 flex flex-col gap-0.5">
+                <h2 className="text-sm font-bold text-slate-900 tracking-tight">코드 다운로드 (Custom)</h2>
+                <span className="text-[11px] font-semibold text-slate-500">
+                  {addressCodeDownloadCustomKind === 'admin' ? '행정동 CodeBook 기준' : '법정동 CodeBook 기준'}
+                </span>
+              </div>
+              <button
+                type="button"
+                className="ml-auto inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+                onClick={() => {
+                  setAddressCodeDownloadCustomMainOpen(false);
+                  setAddressCodeDownloadCustomKind(null);
+                }}
+              >
+                <span className="material-symbols-outlined text-base">close</span>
+                닫기
+              </button>
+            </div>
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#fcfcfc] p-2 sm:p-3 md:p-4">
+              <div className="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col">
+                <AddressSidoCustomDownloadPanel
+                  codebookKind={addressCodeDownloadCustomKind === 'admin' ? 'admin' : 'legal'}
+                />
+              </div>
+            </div>
+          </div>
+        ) : addressCodeDownloadMainOpen ? (
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="shrink-0 flex items-center gap-3 px-4 py-3 border-b border-slate-100 bg-white flex-wrap">
+              {!isSidebarOpen && (
+                <button
+                  type="button"
+                  onClick={() => setIsSidebarOpen(true)}
+                  className="p-1 px-1.5 rounded-md hover:bg-slate-100 text-slate-500 transition-colors"
+                  title="Open Sidebar"
+                >
+                  <span className="material-symbols-outlined text-lg">menu</span>
+                </button>
+              )}
+              <span className="material-symbols-outlined text-red-700 text-xl shrink-0">download</span>
+              <div className="min-w-0 flex flex-col gap-0.5">
+                <h2 className="text-sm font-bold tracking-tight text-slate-900">코드 다운로드 (Default)</h2>
+                <span className="text-[11px] font-semibold text-slate-500">
+                  {addressDownloadKind === 'admin'
+                    ? '행정동 CodeBook 기준'
+                    : addressDownloadKind === 'legal'
+                      ? '법정동 CodeBook 기준'
+                      : 'CodeBook 기준'}
+                </span>
+              </div>
+              <button
+                type="button"
+                className="ml-auto inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+                onClick={() => {
+                  setAddressCodeDownloadMainOpen(false);
+                  setAddressDownloadKind(null);
+                }}
+              >
+                <span className="material-symbols-outlined text-base">close</span>
+                닫기
+              </button>
+            </div>
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#fcfcfc] p-4 md:p-8">
+              <div className="mx-auto flex min-h-0 w-[70%] min-w-0 max-w-full flex-1 flex-col">
+                <AddressCodeDownloadPanel variant="main" forcedKind={addressDownloadKind} />
+              </div>
+            </div>
+          </div>
+        ) : addressCodebookMainOpen && (addressCodebookKind === 'admin' || addressCodebookKind === 'legal') ? (
+          <div className="lg:flex-1 flex min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="flex shrink-0 flex-wrap items-center gap-3 border-b border-slate-100 bg-white px-4 py-3">
+              {!isSidebarOpen && (
+                <button
+                  type="button"
+                  onClick={() => setIsSidebarOpen(true)}
+                  className="rounded-md p-1 px-1.5 text-slate-500 transition-colors hover:bg-slate-100"
+                  title="Open Sidebar"
+                >
+                  <span className="material-symbols-outlined text-lg">menu</span>
+                </button>
+              )}
+              <span className="material-symbols-outlined shrink-0 text-xl text-red-700">menu_book</span>
+              <h2 className="min-w-0 text-sm font-bold tracking-tight text-slate-900">
+                {addressCodebookKind === 'admin' ? '행정동 CodeBook' : '법정동 CodeBook'}
+              </h2>
+              <button
+                type="button"
+                className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50"
+                onClick={() => {
+                  setAddressCodebookMainOpen(false);
+                  setAddressCodebookKind(null);
+                }}
+              >
+                <span className="material-symbols-outlined text-base">close</span>
+                닫기
+              </button>
+            </div>
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#fcfcfc] p-4 md:p-8">
+              <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col">
+                <AddressCodebookSection kind={addressCodebookKind} />
+              </div>
+            </div>
+          </div>
+        ) : !showQuestionPreviewAndSource ? (
+          <div className="lg:flex-1 flex flex-col items-center justify-center min-h-[min(70vh,36rem)] rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-10 text-center shadow-sm">
+            <span className="material-symbols-outlined text-4xl text-slate-300 mb-3">map</span>
+            <p className="text-sm text-slate-600 max-w-md leading-relaxed mb-6">
+              Preview·소스는 <strong className="font-semibold text-slate-800">Sample</strong> 또는 Address{' '}
+              <strong className="font-semibold text-slate-800">「주소 관련 문항」</strong>에서 문항을 선택할 때 표시됩니다.
+              <br />
+              주소 행정·법정 코드는 아래 버튼으로 받을 수 있습니다.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setAddressCodeDownloadCustomMainOpen(false);
+                setAddressCodeDownloadCustomKind(null);
+                setAddressCodeDownloadMainOpen(true);
+                setAddressDownloadKind(null);
+              }}
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-red-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-red-800 transition-colors"
+            >
+              <span className="material-symbols-outlined text-xl">download</span>
+              주소 코드 받기
+            </button>
+          </div>
+        ) : (
         <div className={`lg:flex-1 grid gap-6 lg:overflow-hidden shrink-0 h-auto lg:h-full ${userLevel === 2 ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'}`}>
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-hidden min-h-[500px] lg:min-h-0">
             <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white flex-wrap h-auto">
@@ -458,7 +748,11 @@ function App() {
             <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
               <div className="flex items-center gap-3">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                  {selectedQnum || "Source"}
+                  {selectedQnum ? (
+                    <span className="normal-case">{formatQnumDisplay(selectedQnum)}</span>
+                  ) : (
+                    'Source'
+                  )}
                 </span>
                 {isDetailLoading && (
                   <span className="text-[10px] font-semibold text-red-700 animate-pulse">
@@ -479,20 +773,19 @@ function App() {
                 >
                   Perl
                 </button>
-
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-6 font-mono text-[13px] leading-6 bg-white">
+            <div className="flex-1 min-h-0 flex flex-col overflow-hidden p-6 font-mono text-[13px] leading-6 bg-white">
               {selectedQnum ? (
                 <CodePanel
-                    data={fullQuestionData}
-                    userLevel={userLevel}
-                    selectedQnum={selectedQnum}
-                    activeTab={activeTab} // Lifted State
-                    engine={engine}       // Lifted State
-                    setEngine={setEngine} // Lifted State
-                    isLoading={isDetailLoading}
-                  />
+                  data={fullQuestionData}
+                  userLevel={userLevel}
+                  selectedQnum={selectedQnum}
+                  activeTab={activeTab}
+                  engine={engine}
+                  setEngine={setEngine}
+                  isLoading={isDetailLoading}
+                />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-xs text-slate-400">
                   왼쪽에서 문항을 선택하면 코드가 표시됩니다.
@@ -501,8 +794,15 @@ function App() {
             </div>
             <div className="px-4 py-3 bg-slate-50 border-t border-slate-100 flex justify-between items-center text-[10px] text-slate-400 font-mono font-bold uppercase tracking-wider shrink-0">
               <button
+                type="button"
                 onClick={handleCopyCode}
-                className="hover:text-red-700 transition-colors flex items-center gap-1.5"
+                disabled={
+                  !fullQuestionData ||
+                  (activeTab === 'qm' && !(fullQuestionData?.qmcode)) ||
+                  (activeTab === 'perl' &&
+                    !(engine === 'condition' ? fullQuestionData?.PerlSourceC : fullQuestionData?.PerlSourceQ))
+                }
+                className="hover:text-red-700 transition-colors flex items-center gap-1.5 disabled:opacity-40 disabled:pointer-events-none disabled:hover:text-slate-400"
               >
                 <span className="material-symbols-outlined text-[14px]">content_copy</span> Copy
               </button>
@@ -512,13 +812,20 @@ function App() {
             </div>
           </div>
           )}
-        </div >
+        </div>
+        )}
         <footer className="flex items-center justify-between py-1 text-[10px] text-slate-300 uppercase tracking-widest font-bold shrink-0">
           <div>© Hankook Research. All rights reserved. | Website Manager: Solution Division 2 (esha / jychoi)</div>
         </footer>
       </main>
       </div>
-      {isChatbotEnabled() ? <FloatingChatbot /> : null}
+      <FloatingChatbot
+        comingSoon={!isChatbotEnabled()}
+        onNavigateToQnum={(qnum) => {
+          handleSelect({ value: qnum });
+          setIsSidebarOpen(true);
+        }}
+      />
     </div>
   );
 }

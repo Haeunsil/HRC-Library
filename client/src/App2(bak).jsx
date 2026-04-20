@@ -2,7 +2,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import Sidebar from './components/Sidebar';
 import ViewPanel from './components/ViewPanel';
 const CodePanelLazy = React.lazy(() => import('./components/CodePanel'));
-import { getQuestionsSummary, getQuestionTypes, getQuestionDetail } from './api';
+import { getQuestionsSummary, getQuestionTypes, getQuestionDetail, searchQuestions } from './api';
 
 function App() {
   const [selectedQnum, setSelectedQnum] = useState(() => {
@@ -74,6 +74,9 @@ function App() {
   const [activeTab, setActiveTab] = useState('qm'); // 'qm' or 'perl'
   const [engine, setEngine] = useState('question'); // 'question' or 'condition' (for Perl)
 
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchHitQnums, setSearchHitQnums] = useState(() => new Set());
+
   useEffect(() => {
     let cancelled = false;
     const loadAll = async () => {
@@ -103,6 +106,26 @@ function App() {
     loadAll();
     return () => { cancelled = true; };
   }, []);
+
+  useEffect(() => {
+    const t = (searchTerm || '').trim();
+    if (t.length < 2) {
+      setSearchHitQnums(new Set());
+      return;
+    }
+    setSearchHitQnums(new Set());
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      const rows = await searchQuestions(t);
+      if (!cancelled && Array.isArray(rows)) {
+        setSearchHitQnums(new Set(rows.map((r) => r.qnum)));
+      }
+    }, 320);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [searchTerm]);
 
   useEffect(() => {
     if (!selectedQnum) return;
@@ -171,9 +194,6 @@ function App() {
     }
     copyToClipboard(text);
   };
-
-  /* Search State */
-  const [searchTerm, setSearchTerm] = useState('');
 
   // Dynamic Breadcrumb State
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -258,7 +278,7 @@ function App() {
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg group-focus-within/search:text-red-700 transition-colors">search</span>
             <input
               className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-700/10 focus:border-red-700 transition-all text-sm placeholder:text-slate-400"
-              placeholder="Find Question..."
+              placeholder="태그, 작성자, 코드 내용 검색…"
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -271,6 +291,7 @@ function App() {
           onSelect={handleSelect}
           selectedQnum={selectedQnum}
           searchTerm={searchTerm}
+          searchHitQnums={searchHitQnums}
           categories={categories}
           categoryData={categoryData}
         />

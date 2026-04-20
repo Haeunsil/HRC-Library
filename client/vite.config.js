@@ -39,9 +39,19 @@ export default defineConfig({
   base: './',
   server: {
     // Vite dev(5173)에서 /api 요청을 FastAPI(8000)로 프록시
+    // localhost 대신 127.0.0.1: Windows에서 IPv6(::1)만 리슨하는 경우 연결 실패·404 방지
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: process.env.VITE_DEV_API_TARGET || 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
+  preview: {
+    proxy: {
+      '/api': {
+        target: process.env.VITE_DEV_API_TARGET || 'http://127.0.0.1:8000',
         changeOrigin: true,
         secure: false,
       },

@@ -31,6 +31,9 @@
   --primary-dark: #8A2226;
   --primary-light: #FEF2F2;
 
+  /* Tailwind red-700 동일 계열 — CodeBook 등에서 var(--color-red-700) 로 사용 */
+  --color-red-700: oklch(50.5% 0.213 27.518);
+
   /* Gradients & Textures */
   /* Gradients & Textures */
   --grad-primary: linear-gradient(180deg, #C0454B 0%, #7A1C20 100%);
@@ -1631,6 +1634,46 @@ footer {
   flex: 1;
   background: #ffffff;
   position: relative;
+}
+
+/* Monaco Find: 검색창(find-widget) 위치·크기는 그대로, 입력칸(.monaco-findInput) 안에서만 .controls를 좌측 하단(입력 아래) */
+.code-content .monaco-editor .find-widget.visible {
+  box-sizing: border-box !important;
+  min-width: 350px !important;
+  min-height: 55px !important;
+  height: 55px !important;
+  overflow: visible !important;
+}
+.code-content .monaco-editor .find-widget .find-part {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  min-width: 0;
+}
+.code-content .monaco-editor .find-widget .monaco-findInput {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  gap: 3px;
+}
+.code-content .monaco-editor .find-widget .monaco-findInput > .monaco-scrollable-element {
+  flex: 0 1 auto !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  overflow: hidden;
+}
+.code-content .monaco-editor .find-widget .monaco-findInput > .controls {
+  position: static !important;
+  align-self: flex-start !important;
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  margin: 0 !important;
+  gap: 2px;
+  flex: none !important;
 }
 
 .syntax-wrapper {

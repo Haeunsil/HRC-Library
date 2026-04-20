@@ -7,7 +7,9 @@
     "dev": "vite",
     "dev:server": "cd ../server && python main.py",
     "dev:all": "concurrently -n s,c \"npm run dev:server\" \"npm run dev\"",
-    "build": "vite build && node scripts/fix-dist-base.mjs",
+    "sync-rag-docs": "node scripts/sync-rag-docs.mjs",
+    "copy-content": "node scripts/copy-content.mjs",
+    "build": "vite build && node scripts/copy-content.mjs && node scripts/fix-dist-base.mjs && node scripts/sync-rag-docs.mjs",
     "deploy:merge": "node scripts/deploy-merge.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -22,15 +24,16 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-syntax-highlighter": "^16.1.0",
-    "rollup": "^4.59.0"
+    "rollup": "^4.59.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "concurrently": "^9.1.0",
     "@eslint/js": "^9.39.1",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
     "autoprefixer": "^10.4.27",
+    "concurrently": "^9.1.0",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
